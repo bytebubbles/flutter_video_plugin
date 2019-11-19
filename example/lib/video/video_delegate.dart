@@ -1,19 +1,13 @@
 
-import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_tencentplayer/flutter_tencentplayer.dart';
 import 'package:flutter/widgets.dart';
-import 'package:sys_volume/flutter_volume.dart';
-import 'package:volume_watcher/volume_watcher.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:auto_orientation/auto_orientation.dart';
+
 import 'dimension.dart';
-import 'fullscreen_route.dart';
 
 typedef Widget VideoWidgetBuilder(
     BuildContext context,   TencentPlayerController controller);
