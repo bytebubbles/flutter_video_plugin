@@ -104,7 +104,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                 mVodPlayer.setStartTime(((Number)call.argument("startTime")).floatValue());
             }
             mVodPlayer.setAutoPlay((boolean) call.argument("autoPlay"));
-
+            mVodPlayer.setMute((boolean) call.argument("defaultMute"));
         }
 
         private void setFlutterBridge(EventChannel eventChannel, TextureRegistry.SurfaceTextureEntry textureEntry, Result result) {

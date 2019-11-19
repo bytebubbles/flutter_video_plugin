@@ -1,8 +1,8 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
 export "FLUTTER_ROOT=/Users/titilife/Desktop/development/flutter"
-export "FLUTTER_APPLICATION_PATH=/Users/titilife/flutter-project/flutter_tencentplayer/example"
-export "FLUTTER_TARGET=/Users/titilife/flutter-project/flutter_tencentplayer/example/lib/control_main.dart"
+export "FLUTTER_APPLICATION_PATH=/Users/titilife/flutter-project/flutter_video_pugin/example"
+export "FLUTTER_TARGET=/Users/titilife/flutter-project/flutter_video_pugin/example/lib/control_main.dart"
 export "FLUTTER_BUILD_DIR=build"
 export "SYMROOT=${SOURCE_ROOT}/../build/ios"
 export "FLUTTER_FRAMEWORK_DIR=/Users/titilife/Desktop/development/flutter/bin/cache/artifacts/engine/ios"

@@ -13,11 +13,7 @@ PODS:
   - sqflite (0.0.1):
     - Flutter
     - FMDB (~> 2.7.2)
-  - sys_volume (0.1.0):
-    - Flutter
   - TXLiteAVSDK_Player (6.7.7758)
-  - volume_watcher (0.0.1):
-    - Flutter
 
 DEPENDENCIES:
   - auto_orientation (from `.symlinks/plugins/auto_orientation/ios`)
@@ -25,8 +21,6 @@ DEPENDENCIES:
   - flutter_tencentplayer (from `.symlinks/plugins/flutter_tencentplayer/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - sqflite (from `.symlinks/plugins/sqflite/ios`)
-  - sys_volume (from `.symlinks/plugins/sys_volume/ios`)
-  - volume_watcher (from `.symlinks/plugins/volume_watcher/ios`)
 
 SPEC REPOS:
   trunk:
@@ -44,10 +38,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/path_provider/ios"
   sqflite:
     :path: ".symlinks/plugins/sqflite/ios"
-  sys_volume:
-    :path: ".symlinks/plugins/sys_volume/ios"
-  volume_watcher:
-    :path: ".symlinks/plugins/volume_watcher/ios"
 
 SPEC CHECKSUMS:
   auto_orientation: 2941c44ebe5c3d41016001597ab03e81a92a26ce
@@ -56,9 +46,7 @@ SPEC CHECKSUMS:
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   path_provider: fb74bd0465e96b594bb3b5088ee4a4e7bb1f2a9d
   sqflite: ff1d9da63c06588cc8d1faf7256d741f16989d5a
-  sys_volume: 76971cb39ff96966c3cf801a9ab765dea0048d38
   TXLiteAVSDK_Player: 12cd6808142ecc4ddde08271a9c4ce8cfee184d7
-  volume_watcher: 8c3fccf94e46ef52bcb435644e8969ddc687c580
 
 PODFILE CHECKSUM: 7fb83752f59ead6285236625b82473f90b1cb932
 

@@ -49,7 +49,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
         dataSourceDescription = <String, dynamic>{'uri': dataSource};
         break;
     }
-    value = value.copyWith(isPlaying: playerConfig.autoPlay,playend: false);
+    value = value.copyWith(isPlaying: playerConfig.autoPlay,playend: false, isMute: playerConfig.defaultMute);
     dataSourceDescription.addAll(playerConfig.toJson());
     final Map<String, dynamic> response =
     await channel.invokeMapMethod<String, dynamic>(

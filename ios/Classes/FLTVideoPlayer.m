@@ -62,6 +62,7 @@
     playConfig.maxBufferSize=4;
     //[argsMap[@"progressInterval"] intValue] ;
     BOOL autoPlayArg = [argsMap[@"autoPlay"] boolValue];
+    BOOL defaultMute = [argsMap[@"defaultMute"] boolValue];
     float startPosition=0;
     
     id startTime = argsMap[@"startTime"];
@@ -75,6 +76,7 @@
     [playConfig setPlayerPixelFormatType:kCVPixelFormatType_32BGRA];
     [_txPlayer setConfig:playConfig];
     [_txPlayer setIsAutoPlay:autoPlayArg];
+    [_txPlayer setMute:defaultMute];
     _txPlayer.enableHWAcceleration = YES;
     [_txPlayer setVodDelegate:self];
     [_txPlayer setVideoProcessDelegate:self];

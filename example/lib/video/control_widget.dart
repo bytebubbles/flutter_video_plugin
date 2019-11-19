@@ -170,6 +170,11 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
   }
   initAnimation(){
     aniCtrl = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
+    aniCtrl.addListener((){
+      if (mounted) {
+        setState(() {});
+      }
+    });
     aniCtrl.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         //AnimationStatus.completed 动画在结束时停止的状态
@@ -180,13 +185,14 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
       }
     });
     downOffsetAnimation = Tween(begin: Offset(0, 0), end: Offset(0, 1)).animate(aniCtrl);
-    rightOffsetAnimation = Tween(begin: Offset(0, 0), end: Offset(1, 0)).animate(aniCtrl);
+    rightOffsetAnimation = Tween(begin: Offset(0, 0), end: Offset(2, 0)).animate(aniCtrl);
     opacityAnimation =  Tween<double>(begin: 1, end: 0).animate(aniCtrl);
   }
   @override
   void deactivate() {
     // TODO: implement deactivate
     //controller.removeListener(listener);
+    aniCtrl.stop();
     super.deactivate();
   }
 
@@ -195,6 +201,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
     // TODO: implement dispose
     routeObserver.unsubscribe(this);
     _clearTime();
+    aniCtrl.dispose();
     super.dispose();
   }
 
@@ -220,7 +227,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
           child: SlideTransition(
             position: downOffsetAnimation,
             child:Opacity(
-              opacity: opacityAnimation.value,
+              opacity: 1.0 - aniCtrl.value,
               child: Container(
                 padding: EdgeInsets.only(left: setWidth(20),right: setWidth(20)),
                 //height: setWidth(40),
@@ -283,7 +290,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
           child: SlideTransition(
             position: rightOffsetAnimation,
             child: Opacity(
-              opacity: opacityAnimation.value,
+              opacity: 1.0 - aniCtrl.value,
               child: Column(
                 children: <Widget>[
                   //音量按钮
@@ -329,7 +336,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
             resetHideCountDown();
           },
           child: Opacity(
-            opacity: opacityAnimation.value,
+            opacity: 1.0 - aniCtrl.value,
             child: controller.value.isPlaying ? pauseAllow :  playAllow,
           ),
         )),
@@ -348,10 +355,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
             resetHideCountDown();
           },
         ),
-        Offstage(
-          offstage: !isShowControl,
-          child: control,
-        ),
+        control,
         (controller.playerConfig.coverImgUrl != null && controller.value.playend ) ? Stack(
           children: <Widget>[
 

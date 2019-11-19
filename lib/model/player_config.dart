@@ -9,6 +9,7 @@ class PlayerConfig {
   final Map<String, dynamic> auth;
   final bool switchCache;
   final String coverImgUrl;
+  final bool defaultMute;
 
   const PlayerConfig(
       {this.autoPlay = true,
@@ -21,7 +22,8 @@ class PlayerConfig {
         this.startTime,
         this.auth,
         this.switchCache = false,
-        this.coverImgUrl
+        this.coverImgUrl,
+        this.defaultMute = false,
       });
 
   PlayerConfig copyWith({
@@ -33,7 +35,8 @@ class PlayerConfig {
     int startTime,
     Map<String, dynamic> auth,
     bool switchCache,
-    String coverImgUrl
+    String coverImgUrl,
+    bool defaultMute
   }){
     return PlayerConfig(
       autoPlay: autoPlay ?? this.autoPlay,
@@ -44,7 +47,8 @@ class PlayerConfig {
       startTime: startTime ?? this.startTime,
       auth: auth ?? this.auth,
       switchCache: switchCache ?? this.switchCache,
-      coverImgUrl: coverImgUrl ?? this.coverImgUrl
+      coverImgUrl: coverImgUrl ?? this.coverImgUrl,
+      defaultMute: defaultMute ?? this.defaultMute
     );
   }
 
@@ -57,5 +61,7 @@ class PlayerConfig {
     'startTime': this.startTime,
     'auth': this.auth,
     'switchCache': this.switchCache,
+    'defaultMute': this.defaultMute,
+
   };
 }
