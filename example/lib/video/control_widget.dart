@@ -237,7 +237,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.only(right: setWidth(16)),
-                      child: InkWell(
+                      child: GestureDetector(
                         onTap: (){
                           if (!controller.value.initialized) {
                             return;
@@ -294,7 +294,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
               child: Column(
                 children: <Widget>[
                   //音量按钮
-                  InkWell(
+                  GestureDetector(
                     onTap: (){
                       if (!controller.value.initialized) {
                         return;
@@ -308,7 +308,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
                     child: Image.asset( controller.value.isMute ? "images/ic_mute.png" : "images/ic_noise.png", width: setWidth(76),height: setWidth(76)),
                   ),
                   //是否全屏
-                  InkWell(
+                  GestureDetector(
                     onTap: (){
                       //_showFullScreenWithRotateBox(context,controller);
                       showFullScreenWithRotateScreen(context,controller);
@@ -321,7 +321,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
           ),
         ),
 
-        Center(child: InkWell(
+        Center(child: GestureDetector(
           onTap: (){
             if (!controller.value.initialized) {
               return;
@@ -368,7 +368,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
             Align(
               alignment: Alignment.center,
               child: Center(
-                child: InkWell(
+                child: GestureDetector(
                   onTap: (){
                     controller.play();
                   },
@@ -546,7 +546,7 @@ class FullControl extends StatefulWidget {
   _FullControlState createState() => _FullControlState();
 }
 
-class _FullControlState extends State<FullControl> {
+class _FullControlState extends State<FullControl> with SingleTickerProviderStateMixin {
 
   TencentPlayerController get controller => widget.controller;
   Axis get axis => widget.axis;
@@ -555,6 +555,12 @@ class _FullControlState extends State<FullControl> {
   Widget controlAni ;
   Timer resetHideCountDownTimer;
   bool isShowControl = true;
+  bool isTiming = true;
+  //动画控制器
+  AnimationController aniCtrl;
+  Animation<Offset> downOffsetAnimation;
+  Animation<Offset> rightOffsetAnimation;
+  Animation<double> opacityAnimation;
 
   Widget playAllow = Image.asset("images/ic_play.png",width: 70,height: 70);
   Widget pauseAllow = Image.asset("images/ic_pause.png",width: 70,height: 70);
@@ -582,16 +588,19 @@ class _FullControlState extends State<FullControl> {
 
   //重置隐藏控制面板的计时
   void resetHideCountDown(){
-    _clearTime();
-    setState(() {
-      isShowControl = true;
-    });
-    resetHideCountDownTimer = Timer(Duration(seconds: 2),(){
-      setState(() {
-        isShowControl = false;
-      });
-
-    });
+    if(isTiming){
+      _clearTime();
+      isTiming = false;
+      print("isTiming = true;");
+      if(aniCtrl != null){
+        aniCtrl.forward();
+      }
+    }else {
+      isTiming = true;
+      print("isTiming = false;");
+      aniCtrl.reverse();
+      _startTime();
+    }
   }
   //隐藏控制面板
   void hideControlPanel(){
@@ -600,7 +609,16 @@ class _FullControlState extends State<FullControl> {
       isShowControl = false;
     });
   }
-
+  _startTime(){
+    _clearTime();
+    resetHideCountDownTimer = Timer(Duration(seconds: 2),(){
+      setState(() {
+        isTiming = false;
+        aniCtrl.forward();
+        //isShowControl = false;
+      });
+    });
+  }
   _clearTime(){
     if(resetHideCountDownTimer != null){
       resetHideCountDownTimer.cancel();
@@ -608,13 +626,35 @@ class _FullControlState extends State<FullControl> {
     }
   }
 
+  initAnimation(){
+    aniCtrl = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
+    aniCtrl.addListener((){
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    aniCtrl.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        //AnimationStatus.completed 动画在结束时停止的状态
+        //ontroller.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        //AnimationStatus.dismissed 表示动画在开始时就停止的状态
+        //controller.forward();
+      }
+    });
+    downOffsetAnimation = Tween(begin: Offset(0, 0), end: Offset(0, 1)).animate(aniCtrl);
+    rightOffsetAnimation = Tween(begin: Offset(0, 0), end: Offset(2, 0)).animate(aniCtrl);
+    opacityAnimation =  Tween<double>(begin: 1, end: 0).animate(aniCtrl);
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    resetHideCountDown();
+    _startTime();
     imageFadeAnim = FadeAnimation(child: playAllow);
     controller.addListener(listener);
+    initAnimation();
     //controller.play();
   }
 
@@ -622,6 +662,7 @@ class _FullControlState extends State<FullControl> {
   void deactivate() {
     // TODO: implement deactivate
     controller.removeListener(listener);
+    aniCtrl.stop();
     super.deactivate();
   }
 
@@ -629,6 +670,7 @@ class _FullControlState extends State<FullControl> {
   void dispose() {
     // TODO: implement dispose
     _clearTime();
+    aniCtrl.dispose();
     super.dispose();
   }
 
@@ -648,56 +690,60 @@ class _FullControlState extends State<FullControl> {
       children: <Widget>[
         //进度条
         Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            padding: EdgeInsets.only(left: _setWidthDelegate(33),right: _setWidthDelegate(33),bottom: _setWidthDelegate(28)),
-            //height: setFullWidth(40),
-            //width: setFullWidth(544),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SlideTransition(
+              position: downOffsetAnimation,
+              child:Container(
+                padding: EdgeInsets.only(left: _setWidthDelegate(33),right: _setWidthDelegate(33),bottom: _setWidthDelegate(28)),
+                //height: setFullWidth(40),
+                //width: setFullWidth(544),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
 
-                Padding(
-                  padding: EdgeInsets.only(right: _setWidthDelegate(16)),
-                  child: Text(
-                    "${position}",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: _setSpDelegate(22),
+                    Padding(
+                      padding: EdgeInsets.only(right: _setWidthDelegate(16)),
+                      child: Text(
+                        "${position}",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: _setSpDelegate(22),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: ProgressWidget(controller,screenHorizontal: true,),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(left: _setWidthDelegate(16)),
-                  child: Text(
-                    "${duration}",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: _setSpDelegate(22),
+                    Expanded(
+                      child: ProgressWidget(controller,screenHorizontal: true,),
                     ),
-                  ),
+                    Padding(
+                      padding: EdgeInsets.only(left: _setWidthDelegate(16)),
+                      child: Text(
+                        "${duration}",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: _setSpDelegate(22),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: _setWidthDelegate(19)),
+                      child: GestureDetector(
+                        onTap: (){
+                          Navigator.pop(context);
+                        },
+                        child: Image.asset("images/ic_small_screen.png",width: _setWidthDelegate(48),height: _setWidthDelegate(48)),
+                      ),
+                    ),
+                  ],
                 ),
-                Padding(
-                  padding: EdgeInsets.only(left: _setWidthDelegate(19)),
-                  child: InkWell(
-                    onTap: (){
-                      Navigator.pop(context);
-                    },
-                    child: Image.asset("images/ic_small_screen.png",width: _setWidthDelegate(48),height: _setWidthDelegate(48)),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            )
+
 
         ),
 
-        Center(child: InkWell(
+        Center(child: GestureDetector(
           onTap: (){
             if (!controller.value.initialized) {
               return;
@@ -713,7 +759,10 @@ class _FullControlState extends State<FullControl> {
 
             });
           },
-          child: controller.value.isPlaying ? pauseAllow :  playAllow,
+          child: Opacity(
+            opacity: 1.0 - aniCtrl.value,
+            child: controller.value.isPlaying ? pauseAllow :  playAllow,
+          ),
         )),
       ],
     );
@@ -730,10 +779,7 @@ class _FullControlState extends State<FullControl> {
             resetHideCountDown();
           },
         ),
-        Offstage(
-          offstage: !isShowControl,
-          child: control,
-        ),
+        control,
 
         Center(child: controller.value.isLoading ? const CircularProgressIndicator() : null),
       ],
