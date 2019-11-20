@@ -75,8 +75,51 @@ class _MyHomePageState extends State<MyHomePage> {
                     controller: controller,
                     childBuilder:(BuildContext context, TencentPlayerController controller) => AspectRatioVideo(controller)
                 ),
-              )
+              ),
+              FlatButton(
+                child: Text("销毁"),
+                onPressed: (){
+                  if(controller != null){
+                    if(controller.isDisposed){
+                      print("已销毁");
 
+                    }else {
+                      controller.dispose();
+                    }
+
+                  }
+                },
+              ),
+              FlatButton(
+                child: Text("暂停"),
+
+                onPressed: (){
+                  print("---------------------暂停:${controller.hashCode}");
+                  if(controller != null){
+                    controller.pause();
+                  }
+                },
+              ),
+              FlatButton(
+                child: Text("播放"),
+
+                onPressed: (){
+                  //print("---------------------暂停:${controller.hashCode}");
+                  /*if(controller != null){
+
+                    if(controller.isDisposed){
+                      print("已销毁");
+                      String coverImg = null;
+                      setState(() {
+                        controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: false,switchCache: true, coverImgUrl: coverImg, defaultMute: true),);
+                      });
+                    }else {
+                      controller.dispose();
+                    }
+
+                  }*/
+                },
+              ),
             ],
           ),
         ),

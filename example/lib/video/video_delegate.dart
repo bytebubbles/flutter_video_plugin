@@ -31,9 +31,8 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
   Directory directory;
   @override
   void initState() {
-    super.initState();
     _handlingController();
-
+    super.initState();
   }
 
   @override
@@ -60,9 +59,10 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     }
   }
   _initVideo(){
-
+    print("------------PlayerLifeCycle--_initVideo");
     controller?.initialize()?.then((_) {
-      setState(() {});
+      //controller.playerConfig = controller.playerConfig;
+          setState(() {});
     });
     controller.addListener(() {
       if (controller.value.hasError) {

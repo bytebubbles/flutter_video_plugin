@@ -14,7 +14,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
   // ignore: unnecessary_getters_setters
   set playerConfig(PlayerConfig playerConfig) {
     assert ((){
-      if(_creatingCompleter == null) {
+      if(value.initialized) {
         throw FlutterError(
             "-------不可以在初始化后更改配置(PlayerConfig)-------"
         );
@@ -47,6 +47,9 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
   }
 
   bool _isDisposed = false;
+  get isDisposed {
+    return _isDisposed;
+  }
   Completer<void> _creatingCompleter;
   StreamSubscription<dynamic> _eventSubscription;
   _VideoAppLifeCycleObserver _lifeCycleObserver;
