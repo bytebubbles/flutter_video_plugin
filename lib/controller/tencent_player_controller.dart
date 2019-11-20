@@ -9,23 +9,42 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
   int _textureId;
   final String dataSource;
   final DataSourceType dataSourceType;
-  final PlayerConfig playerConfig;
+  PlayerConfig _playerConfig = PlayerConfig();
   MethodChannel channel = TencentPlayer.channel;
-
-
+  // ignore: unnecessary_getters_setters
+  set playerConfig(PlayerConfig playerConfig) {
+    assert ((){
+      if(_creatingCompleter == null) {
+        throw FlutterError(
+            "-------不可以在初始化后更改配置(PlayerConfig)-------"
+        );
+      }
+      return true;
+    }());
+    _playerConfig = playerConfig;
+  }
+  // ignore: unnecessary_getters_setters
+  get playerConfig{
+    return _playerConfig;
+  }
   TencentPlayerController.asset(this.dataSource,
-      {this.playerConfig = const PlayerConfig()})
+      {playerConfig = const PlayerConfig()})
       : dataSourceType = DataSourceType.asset,
-        super(TencentPlayerValue());
+        super(TencentPlayerValue()){
+    _playerConfig = playerConfig;
+  }
 
-  TencentPlayerController.network(this.dataSource, {this.playerConfig = const PlayerConfig()}): dataSourceType = DataSourceType.network,
-        super(TencentPlayerValue());
+  TencentPlayerController.network(this.dataSource, {PlayerConfig playerConfig = const PlayerConfig()}) : dataSourceType = DataSourceType.network, super(TencentPlayerValue()){
+    _playerConfig = playerConfig;
+  }
 
   TencentPlayerController.file(String filePath,
-      {this.playerConfig = const PlayerConfig()})
+      {playerConfig = const PlayerConfig()})
       : dataSource = filePath,
         dataSourceType = DataSourceType.file,
-        super(TencentPlayerValue());
+        super(TencentPlayerValue()){
+    _playerConfig = playerConfig;
+  }
 
   bool _isDisposed = false;
   Completer<void> _creatingCompleter;

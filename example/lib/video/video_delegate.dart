@@ -54,12 +54,14 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
       directory = await getTemporaryDirectory();
       print("-------directory.path:${directory.path}");
       PlayerConfig playerConfig = controller.playerConfig.copyWith(cachePath: directory.path);
-      controller = TencentPlayerController.network(controller.dataSource, playerConfig: playerConfig);
+      //controller.setPlayerConfig(playerConfig);
+      controller.playerConfig = playerConfig;
+      //controller = TencentPlayerController.network(controller.dataSource, playerConfig: playerConfig);
     }
   }
   _initVideo(){
 
-    controller?.initialize().then((_) {
+    controller?.initialize()?.then((_) {
       setState(() {});
     });
     controller.addListener(() {
@@ -97,7 +99,9 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
                 child: InkWell(
                   onTap: (){
                     PlayerConfig playerConfig = controller.playerConfig.copyWith(autoPlay: true);
-                    controller = TencentPlayerController.network(controller.dataSource, playerConfig: playerConfig);
+                    controller.playerConfig = playerConfig;
+                    //controller.setPlayerConfig(playerConfig);
+                    //controller = TencentPlayerController.network(controller.dataSource, playerConfig: playerConfig);
 
                     _initVideo();
                   },
