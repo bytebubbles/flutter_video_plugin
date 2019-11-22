@@ -11,7 +11,7 @@ class PlayerConfig {
   //----- 拓展属性 ---
   final bool switchCache;
   final String coverImgUrl;
-  final bool haveNetworkAutoPlay;
+  final bool haveWifiAutoPlay;
   const PlayerConfig(
       {this.autoPlay = true,
         this.loop = false,
@@ -25,7 +25,7 @@ class PlayerConfig {
         this.switchCache = false,
         this.coverImgUrl,
         this.defaultMute = false,
-        this.haveNetworkAutoPlay = false,
+        this.haveWifiAutoPlay = false,
       });
 
   PlayerConfig copyWith({
@@ -52,7 +52,7 @@ class PlayerConfig {
       switchCache: switchCache ?? this.switchCache,
       coverImgUrl: coverImgUrl ?? this.coverImgUrl,
       defaultMute: defaultMute ?? this.defaultMute,
-      haveNetworkAutoPlay: haveNetworkAutoPlay ?? this.haveNetworkAutoPlay
+      haveWifiAutoPlay: haveNetworkAutoPlay ?? this.haveWifiAutoPlay
     );
   }
 
