@@ -51,7 +51,7 @@
     id cacheFolderPath = argsMap[@"cachePath"];
     if (cacheFolderPath!=nil&&cacheFolderPath!=NULL&&![@"" isEqualToString:cacheFolderPath]&&cacheFolderPath!=[NSNull null]) {
         playConfig.cacheFolderPath = cacheFolderPath;
-        playConfig.maxCacheItems = 4;
+        playConfig.maxCacheItems = 5;
     }else{
         // 设置缓存路径
         //playConfig.cacheFolderPath =[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
