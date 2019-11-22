@@ -24,7 +24,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
     _playerConfig = playerConfig;
   }
   // ignore: unnecessary_getters_setters
-  get playerConfig{
+  PlayerConfig get playerConfig{
     return _playerConfig;
   }
   TencentPlayerController.asset(this.dataSource,
