@@ -89,10 +89,12 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       final Map<dynamic, dynamic> map = event;
       switch (map['event']) {
         case 'initialized':
+          print("-----myPlayer:initialized-${value}");
           value = value.copyWith(
             duration: Duration(milliseconds: map['duration']),
             size: Size(map['width']?.toDouble() ?? 0.0,
                 map['height']?.toDouble() ?? 0.0),
+            reconnectCount: 0
           );
           if(!initializingCompleter.isCompleted) initializingCompleter.complete(null);
           break;
@@ -102,33 +104,39 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
             duration: Duration(milliseconds: map['duration']),
             playable: Duration(milliseconds: map['playable']),
           );
+          print("-----myPlayer:progress-${value}");
           break;
         case 'loading':
+          print("-----myPlayer:loading-${value}");
           value = value.copyWith(isLoading: true);
           break;
         case 'loadingend':
+          print("-----myPlayer:loadingend-${value}");
           value = value.copyWith(isLoading: false);
           break;
         case 'playend':
+          print("-----myPlayer:playend-${value}");
           value = value.copyWith(isPlaying: false, position: value.duration,playend: true);
           break;
         case 'netStatus':
+          print("-----myPlayer:netStatus-netSpeed:${map['netSpeed']}-cacheSize:${map['cacheSize']}");
           value = value.copyWith(netSpeed: map['netSpeed']);
           break;
         case 'error':
+          print("-----myPlayer:error-${ map['errorInfo']}");
           value = value.copyWith(errorDescription: map['errorInfo']);
           break;
         case 'reconnect':
-          print("-------reconnect--------");
-          value = value.copyWith(isReconnect: true);
+          print("-------myPlayer:reconnect--------");
+          value = value.copyWith(reconnectCount: value.reconnectCount+1);
           break;
         case 'playBegin':
-          print("-------playBegin--------");
-          value = value.copyWith(isReconnect: false);
+          print("-------myPlayer:playBegin--------");
+          value = value.copyWith(reconnectCount: 0);
           break;
         case 'disconnect':
-          print("-------disconnect--------");
-          value = value.copyWith(isReconnect: false, isDisconnect: true);
+          print("-------myPlayer:disconnect--------");
+          value = value.copyWith(isDisconnect: true);
           break;
 
       }

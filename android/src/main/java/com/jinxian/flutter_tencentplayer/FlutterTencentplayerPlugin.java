@@ -233,6 +233,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                 Map<String, Object> errorMap = new HashMap<>();
                 errorMap.put("event", "error");
                 errorMap.put("errorInfo", param.getString(TXLiveConstants.EVT_DESCRIPTION));
+                errorMap.put("errorCode", event);
                 eventSink.success(errorMap);
             }
         }

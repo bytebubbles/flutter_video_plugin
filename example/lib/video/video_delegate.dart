@@ -29,6 +29,10 @@ abstract class PlayerLifeCycle extends StatefulWidget {
 abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
   TencentPlayerController controller;
   Directory directory;
+  bool isReplay = false;
+  Widget coverContorllerWidget;
+  bool isHideTryButton = true;
+  Widget controlWidget;
   @override
   void initState() {
     _handlingController();
@@ -65,45 +69,69 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
           setState(() {});
     });
     controller.addListener(() {
-      if (controller.value.hasError) {
-        print("----------hasError:${controller.value.errorDescription}");
+      if(controller.value.isDisconnect){
+        //controller.dispose();
+        //isHideTryButton = false;
+        isReplay = true;
+        setState(() {
+        });
       }
     });
   }
   @override
   Widget build(BuildContext context) {
-    Widget controlWidget;
-    if(!controller.playerConfig.autoPlay && !controller.value.initialized){
-      Widget coverImg;
-      if(controller.playerConfig.coverImgUrl != null && controller.playerConfig.coverImgUrl != ""){
-        coverImg = CachedNetworkImage(
-          imageUrl: controller.playerConfig.coverImgUrl,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-        );
-      }else {
-        coverImg = Container(
+
+    if(isReplay){
+      /*controlWidget = AspectRatio(
+        aspectRatio: 1,
+        child: Container(
           color: Colors.black,
-        );
-      }
+          child: GestureDetector(child: Center(child: const CircularProgressIndicator(),),onTap: ()
+            {
+              String url = controller.dataSource;
+              PlayerConfig playerConfig = controller.playerConfig.copyWith(autoPlay: true,defaultMute: false);
+              controller.dispose();
+              controller = null;
+              controller = TencentPlayerController.network(url, playerConfig: playerConfig);
+              isReplay = false;
+              setState(() {
+
+              });
+
+            },) ,
+        ),
+      );*/
       controlWidget = AspectRatio(
         aspectRatio: 1,
         child: Stack(
           children: <Widget>[
-            coverImg,
+            Container(
+              color: Colors.black,
+            ),
 
             Align(
               alignment: Alignment.center,
               child: Center(
                 child: InkWell(
                   onTap: (){
-                    PlayerConfig playerConfig = controller.playerConfig.copyWith(autoPlay: true);
-                    controller.playerConfig = playerConfig;
-                    //controller.setPlayerConfig(playerConfig);
-                    //controller = TencentPlayerController.network(controller.dataSource, playerConfig: playerConfig);
+                    String url = controller.dataSource;
+                    PlayerConfig playerConfig = controller.playerConfig.copyWith(autoPlay: true,defaultMute: false);
+                    controller.dispose();
+                    controller = null;
+                    controller = TencentPlayerController.network(url, playerConfig: playerConfig);
+                    isReplay = false;
+                    controller.addListener(() {
+                      if(controller.value.isDisconnect){
+                        //controller.dispose();
+                        //isHideTryButton = false;
+                        isReplay = true;
+                        setState(() {
+                        });
+                      }
+                    });
+                    setState(() {
 
-                    _initVideo();
+                    });
                   },
                   child: Image.asset("images/ic_play.png",width: setWidth(140),height: setWidth(140)),
                 ) ,
@@ -114,15 +142,107 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
         ),
       );
     }else {
-      if(!controller.value.initialized){
-        _initVideo();
+      if(!controller.playerConfig.autoPlay && !controller.value.initialized){
+        Widget coverImg;
+        if(controller.playerConfig.coverImgUrl != null && controller.playerConfig.coverImgUrl != ""){
+          coverImg = CachedNetworkImage(
+            imageUrl: controller.playerConfig.coverImgUrl,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          );
+        }else {
+          coverImg = Container(
+            color: Colors.black,
+          );
+        }
+        controlWidget = AspectRatio(
+          aspectRatio: 1,
+          child: Stack(
+            children: <Widget>[
+              coverImg,
+
+              Align(
+                alignment: Alignment.center,
+                child: Center(
+                  child: InkWell(
+                    onTap: (){
+                      PlayerConfig playerConfig = controller.playerConfig.copyWith(autoPlay: true);
+                      controller.playerConfig = playerConfig;
+                      //controller.setPlayerConfig(playerConfig);
+                      //controller = TencentPlayerController.network(controller.dataSource, playerConfig: playerConfig);
+
+                      _initVideo();
+                    },
+                    child: Image.asset("images/ic_play.png",width: setWidth(140),height: setWidth(140)),
+                  ) ,
+                ),
+              )
+
+            ],
+          ),
+        );
+      }else {
+        if(!controller.value.initialized){
+          _initVideo();
+        }
+        controlWidget = Stack(
+          children: <Widget>[
+
+            widget.childBuilder(context, controller),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              top: 0,
+              child:  Center(
+                child: Offstage(
+                  offstage: false,
+                  child: Center(child: const CircularProgressIndicator(),),
+                ),
+              ),
+            ),
+          ],
+        );
       }
-      controlWidget = widget.childBuilder(context, controller);
     }
-    return controlWidget;
+
+    return Stack(
+      children: <Widget>[
+
+        controlWidget,
+       /* Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          top: 0,
+          child:  Center(
+            child: Offstage(
+              offstage: isHideTryButton,
+              child: GestureDetector(
+                child:  Image.asset("images/ic_play.png",width: setWidth(140),height: setWidth(140)),
+                onTap:(){
+                  //重建
+                  print("重建");
+                  rebuild();
+
+                },
+              ),
+            ),
+          ),
+        ),*/
+      ],
+    ) ;
   }
 
   TencentPlayerController createVideoPlayerController();
+
+/*  void rebuild() {
+    setState(() {
+      isHideTryButton = true;
+      isReplay = true;
+    });
+  }*/
 }
 
 

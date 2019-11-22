@@ -14,7 +14,7 @@ class TencentPlayerValue {
   final double volume;
   final bool playend;
   final bool isMute;
-  final bool isReconnect;
+  final int reconnectCount;
   final bool isDisconnect;
 
   bool get initialized => duration.inMilliseconds != 0;
@@ -37,7 +37,7 @@ class TencentPlayerValue {
     this.volume = 0,
     this.playend = false,
     this.isMute = false,
-    this.isReconnect = false,
+    this.reconnectCount = 0,
     this.isDisconnect = false
   });
 
@@ -54,7 +54,7 @@ class TencentPlayerValue {
     int bitrateIndex, double volume,
     bool playend,
     bool isMute,
-    bool isReconnect,
+    int reconnectCount,
     bool isDisconnect
   }) {
     return TencentPlayerValue(
@@ -71,7 +71,7 @@ class TencentPlayerValue {
       volume: volume ?? this.volume,
       playend: playend ?? this.playend,
       isMute: isMute ?? this.isMute,
-      isReconnect: isReconnect ?? this.isReconnect,
+        reconnectCount: reconnectCount ?? this.reconnectCount,
         isDisconnect: isDisconnect ?? this.isDisconnect
     );
   }

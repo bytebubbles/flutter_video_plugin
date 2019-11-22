@@ -162,11 +162,17 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
     // TODO: implement initState
     super.initState();
     listener = () {
-      print("-------controller：${controller}");
-      if(controller.value.isLoading){
+      //print("-------controller：${controller}");
+      if(controller.value.reconnectCount > 0){
+        //尝试重连
         isLoading = true;
+        print("重连${controller.value.reconnectCount}");
       }else {
-        isLoading = false;
+        if(controller.value.isLoading){
+          isLoading = true;
+        }else {
+          isLoading = false;
+        }
       }
       setState(() {});
 /*      if(controller.value.isDisconnect){
@@ -235,6 +241,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
     routeObserver.unsubscribe(this);
     _clearTime();
     aniCtrl.dispose();
+    controller.removeListener(listener);
     super.dispose();
   }
 
