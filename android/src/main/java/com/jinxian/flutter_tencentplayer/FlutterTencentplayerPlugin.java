@@ -84,7 +84,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             mPlayConfig = new TXVodPlayConfig();
             if (call.argument("cachePath") != null) {
                 mPlayConfig.setCacheFolderPath(call.argument("cachePath").toString());//        mPlayConfig.setCacheFolderPath(Environment.getExternalStorageDirectory().getPath() + "/nellcache");
-                mPlayConfig.setMaxCacheItems(1);
+                mPlayConfig.setMaxCacheItems(4);
             } else {
                 mPlayConfig.setCacheFolderPath(null);
             }
