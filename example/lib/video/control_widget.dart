@@ -156,12 +156,45 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
     super.didChangeDependencies();
     routeObserver.subscribe(this, ModalRoute.of(context));
   }
+  bool isLoading = false;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     listener = () {
+      print("-------controller：${controller}");
+      if(controller.value.isLoading){
+        isLoading = true;
+      }else {
+        isLoading = false;
+      }
       setState(() {});
+/*      if(controller.value.isDisconnect){
+        print("--------断开--------");
+        isLoading = true;
+        setState(() {});
+        return;
+      }*/
+
+      /*if(controller.value.position.inMilliseconds+2 >= controller.value.playable.inMilliseconds){
+        if(isLoading) return;
+        isLoading = true;
+        setState(() {});
+        *//*if((controller.value.isReconnect && controller.value.position.inMilliseconds+2 >= controller.value.playable.inMilliseconds) || controller.value.isLoading ){
+          if(isLoading) return;
+          isLoading = true;
+          setState(() {});
+        }*//*
+      }else {
+        isLoading = false;
+        setState(() {});
+      }*/
+      /*if((controller.value.isReconnect && controller.value.position.inMilliseconds+2 >= controller.value.playable.inMilliseconds) || controller.value.isLoading ){
+        if(isLoading) return;
+        isLoading = true;
+        setState(() {});
+      }*/
+
     };
     imageFadeAnim = FadeAnimation(child: playAllow);
     controller.addListener(listener);
@@ -380,7 +413,7 @@ class _VideoFrameState extends State<VideoFrame>  with RouteAware, SingleTickerP
           ],
         ):Container(),
 
-        Center(child: controller.value.isLoading ? const CircularProgressIndicator() : null),
+        Center(child: isLoading ? const CircularProgressIndicator() : null),
       ],
     );
   }

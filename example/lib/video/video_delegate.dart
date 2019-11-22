@@ -66,7 +66,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     });
     controller.addListener(() {
       if (controller.value.hasError) {
-        print(controller.value.errorDescription);
+        print("----------hasError:${controller.value.errorDescription}");
       }
     });
   }

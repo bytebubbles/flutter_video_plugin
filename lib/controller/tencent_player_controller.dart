@@ -94,7 +94,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
             size: Size(map['width']?.toDouble() ?? 0.0,
                 map['height']?.toDouble() ?? 0.0),
           );
-          initializingCompleter.complete(null);
+          if(!initializingCompleter.isCompleted) initializingCompleter.complete(null);
           break;
         case 'progress':
           value = value.copyWith(
@@ -118,6 +118,19 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
         case 'error':
           value = value.copyWith(errorDescription: map['errorInfo']);
           break;
+        case 'reconnect':
+          print("-------reconnect--------");
+          value = value.copyWith(isReconnect: true);
+          break;
+        case 'playBegin':
+          print("-------playBegin--------");
+          value = value.copyWith(isReconnect: false);
+          break;
+        case 'disconnect':
+          print("-------disconnect--------");
+          value = value.copyWith(isReconnect: false, isDisconnect: true);
+          break;
+
       }
     }
 

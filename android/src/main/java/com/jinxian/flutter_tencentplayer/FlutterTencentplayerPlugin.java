@@ -217,6 +217,17 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                     }
                     eventSink.success(disconnectMap);
                     break;
+                case TXLiveConstants.PLAY_WARNING_RECONNECT:
+                    Map<String, Object> reconnectMap = new HashMap<>();
+                    reconnectMap.put("event", "reconnect");
+                    eventSink.success(reconnectMap);
+                    break;
+                 case TXLiveConstants.PLAY_EVT_PLAY_BEGIN:
+                    Map<String, Object> playBeginMap = new HashMap<>();
+                     playBeginMap.put("event", "playBegin");
+                    eventSink.success(playBeginMap);
+                    break;
+
             }
             if (event < 0) {
                 Map<String, Object> errorMap = new HashMap<>();

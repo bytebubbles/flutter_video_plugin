@@ -134,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //print("cachePath:${directory.path}");
     //String coverImg = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1574011235663&di=05b1a7ca666d55316d19f16bf2c4ab2b&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fblog%2F201510%2F20%2F20151020193329_rjWfs.jpeg";
     String coverImg = null;
-    controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: false,switchCache: true, coverImgUrl: coverImg, defaultMute: true),);
+    controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: false,switchCache: false, coverImgUrl: coverImg, defaultMute: true),);
     //controller.isMute(true);
   }
 }

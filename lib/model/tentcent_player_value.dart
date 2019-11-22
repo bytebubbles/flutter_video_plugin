@@ -14,6 +14,9 @@ class TencentPlayerValue {
   final double volume;
   final bool playend;
   final bool isMute;
+  final bool isReconnect;
+  final bool isDisconnect;
+
   bool get initialized => duration.inMilliseconds != 0;
 
   bool get hasError => errorDescription != null;
@@ -33,7 +36,9 @@ class TencentPlayerValue {
     this.bitrateIndex = 0, //TODO 默认清晰度
     this.volume = 0,
     this.playend = false,
-    this.isMute = false
+    this.isMute = false,
+    this.isReconnect = false,
+    this.isDisconnect = false
   });
 
   TencentPlayerValue copyWith({
@@ -48,7 +53,9 @@ class TencentPlayerValue {
     double rate,
     int bitrateIndex, double volume,
     bool playend,
-    bool isMute
+    bool isMute,
+    bool isReconnect,
+    bool isDisconnect
   }) {
     return TencentPlayerValue(
       duration: duration ?? this.duration,
@@ -63,7 +70,9 @@ class TencentPlayerValue {
       bitrateIndex: bitrateIndex ?? this.bitrateIndex,
       volume: volume ?? this.volume,
       playend: playend ?? this.playend,
-      isMute: isMute ?? this.isMute
+      isMute: isMute ?? this.isMute,
+      isReconnect: isReconnect ?? this.isReconnect,
+        isDisconnect: isDisconnect ?? this.isDisconnect
     );
   }
 
