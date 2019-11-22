@@ -7,10 +7,11 @@ class PlayerConfig {
   // 单位:秒
   final int startTime;
   final Map<String, dynamic> auth;
+  final bool defaultMute;
+  //----- 拓展属性 ---
   final bool switchCache;
   final String coverImgUrl;
-  final bool defaultMute;
-
+  final bool haveNetworkAutoPlay;
   const PlayerConfig(
       {this.autoPlay = true,
         this.loop = false,
@@ -24,6 +25,7 @@ class PlayerConfig {
         this.switchCache = false,
         this.coverImgUrl,
         this.defaultMute = false,
+        this.haveNetworkAutoPlay = false,
       });
 
   PlayerConfig copyWith({
@@ -36,7 +38,8 @@ class PlayerConfig {
     Map<String, dynamic> auth,
     bool switchCache,
     String coverImgUrl,
-    bool defaultMute
+    bool defaultMute,
+    bool haveNetworkAutoPlay,
   }){
     return PlayerConfig(
       autoPlay: autoPlay ?? this.autoPlay,
@@ -48,7 +51,8 @@ class PlayerConfig {
       auth: auth ?? this.auth,
       switchCache: switchCache ?? this.switchCache,
       coverImgUrl: coverImgUrl ?? this.coverImgUrl,
-      defaultMute: defaultMute ?? this.defaultMute
+      defaultMute: defaultMute ?? this.defaultMute,
+      haveNetworkAutoPlay: haveNetworkAutoPlay ?? this.haveNetworkAutoPlay
     );
   }
 
