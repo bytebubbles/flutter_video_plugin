@@ -98,9 +98,9 @@ class _TencentPlayerState extends State<TencentPlayer> {
 
 
 
-    //return _textureId == null ? Container() : textureIdWidget;
+    return _textureId == null ? Container() : textureIdWidget;
     //return _textureId == null ? Container() : DefaultVideoWrapper(controller: widget.controller,textureId: _textureId);;
-    return Container();
+    //return Container();
   }
 }
 
