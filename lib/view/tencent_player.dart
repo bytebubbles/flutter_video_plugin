@@ -24,7 +24,7 @@ class _TencentPlayerState extends State<TencentPlayer> {
   @override
   void initState() {
     super.initState();
-    /*_listener = () {
+    _listener = () {
       final int newTextureId = widget.controller.textureId;
       if (newTextureId != _textureId) {
         setState(() {
@@ -33,7 +33,7 @@ class _TencentPlayerState extends State<TencentPlayer> {
       }
     };
     _textureId = widget.controller.textureId;
-    widget.controller.addListener(_listener);*/
+    widget.controller.addListener(_listener);
   }
 
   @override
@@ -48,8 +48,8 @@ class _TencentPlayerState extends State<TencentPlayer> {
       oldWidget.controller.removeListener(_listener);
     }*/
 
-    /*_textureId = widget.controller.textureId;
-    widget.controller.addListener(_listener);*/
+    _textureId = widget.controller.textureId;
+    widget.controller.addListener(_listener);
   }
 
   @override
