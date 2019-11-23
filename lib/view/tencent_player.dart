@@ -20,7 +20,10 @@ class _TencentPlayerState extends State<TencentPlayer> {
   VoidCallback _listener;
   int _textureId;
 
-  _TencentPlayerState() {
+
+  @override
+  void initState() {
+    super.initState();
     _listener = () {
       final int newTextureId = widget.controller.textureId;
       if (newTextureId != _textureId) {
@@ -29,11 +32,6 @@ class _TencentPlayerState extends State<TencentPlayer> {
         });
       }
     };
-  }
-
-  @override
-  void initState() {
-    super.initState();
     _textureId = widget.controller.textureId;
     widget.controller.addListener(_listener);
   }
