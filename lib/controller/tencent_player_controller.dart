@@ -104,7 +104,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
             duration: Duration(milliseconds: map['duration']),
             playable: Duration(milliseconds: map['playable']),
           );
-          print("-----myPlayer:progress-${value}");
+          //print("-----myPlayer:progress-${value}");
           break;
         case 'loading':
           print("-----myPlayer:loading-${value}");
@@ -119,7 +119,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
           value = value.copyWith(isPlaying: false, position: value.duration,playend: true);
           break;
         case 'netStatus':
-          print("-----myPlayer:netStatus-netSpeed:${map['netSpeed']}-cacheSize:${map['cacheSize']}");
+          //print("-----myPlayer:netStatus-netSpeed:${map['netSpeed']}-cacheSize:${map['cacheSize']}");
           value = value.copyWith(netSpeed: map['netSpeed']);
           break;
         case 'error':

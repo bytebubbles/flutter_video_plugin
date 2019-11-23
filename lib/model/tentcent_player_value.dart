@@ -16,6 +16,7 @@ class TencentPlayerValue {
   final bool isMute;
   final int reconnectCount;
   final bool isDisconnect;
+  final bool isFullScreen;
 
   bool get initialized => duration.inMilliseconds != 0;
 
@@ -38,7 +39,8 @@ class TencentPlayerValue {
     this.playend = false,
     this.isMute = false,
     this.reconnectCount = 0,
-    this.isDisconnect = false
+    this.isDisconnect = false,
+    this.isFullScreen = false,
   });
 
   TencentPlayerValue copyWith({
@@ -55,7 +57,8 @@ class TencentPlayerValue {
     bool playend,
     bool isMute,
     int reconnectCount,
-    bool isDisconnect
+    bool isDisconnect,
+    bool isFullScreen
   }) {
     return TencentPlayerValue(
       duration: duration ?? this.duration,
@@ -72,7 +75,8 @@ class TencentPlayerValue {
       playend: playend ?? this.playend,
       isMute: isMute ?? this.isMute,
         reconnectCount: reconnectCount ?? this.reconnectCount,
-        isDisconnect: isDisconnect ?? this.isDisconnect
+        isDisconnect: isDisconnect ?? this.isDisconnect,
+        isFullScreen: isFullScreen ?? this.isFullScreen
     );
   }
 
@@ -88,7 +92,7 @@ class TencentPlayerValue {
         'netSpeed: $netSpeed),'
         'rate: $rate),'
         'bitrateIndex: $bitrateIndex),'
-        'size: $size)';
+        'size: $size),';
   }
 }
 
