@@ -61,8 +61,41 @@ class _TencentPlayerState extends State<TencentPlayer> {
   @override
   Widget build(BuildContext context) {
     //return _textureId == null ? Container() : Texture(textureId: _textureId);
-    //return _textureId == null ? Container() : DefaultVideoWrapper(controller: widget.controller,textureId: _textureId);
-    return Container();
+    Widget textureIdWidget ;
+    double ratio = widget.controller.value?.aspectRatio ?? 1280 / 720;
+
+    var id = _textureId;
+
+    if (id == null) {
+      textureIdWidget =  AspectRatio(
+        aspectRatio: ratio,
+        child: Container(
+          color: Colors.black,
+        ),
+      );
+    }else {
+      Widget w = Container(
+        color: Colors.black,
+        child: Texture(
+          textureId: id,
+        ),
+      );
+
+
+      if (ratio == 0) {
+        ratio = 1280 / 720;
+      }
+
+      textureIdWidget = AspectRatio(
+        aspectRatio: ratio,
+        child: w,
+      );
+    }
+
+
+
+    return _textureId == null ? Container() : textureIdWidget;
+    //return Container();
   }
 }
 
