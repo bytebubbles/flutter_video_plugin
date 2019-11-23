@@ -41,11 +41,15 @@ class _TencentPlayerState extends State<TencentPlayer> {
   @override
   void didUpdateWidget(TencentPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if(oldWidget.controller.isDisposed) return;
-    if (oldWidget.controller.dataSource != widget.controller.dataSource) {
+    if(oldWidget.controller.isDisposed){
+
+    }else {
+      if (oldWidget.controller.dataSource != widget.controller.dataSource) {
 //      oldWidget.controller.dispose();
+      }
+      oldWidget.controller.removeListener(_listener);
     }
-    oldWidget.controller.removeListener(_listener);
+
     _textureId = widget.controller.textureId;
     widget.controller.addListener(_listener);
   }
