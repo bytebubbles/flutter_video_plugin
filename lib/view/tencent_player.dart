@@ -86,16 +86,21 @@ class _TencentPlayerState extends State<TencentPlayer> {
         ratio = 1280 / 720;
       }
 
-      textureIdWidget = AspectRatio(
-        aspectRatio: ratio,
-        child: w,
-      );
+      textureIdWidget = Container(
+        child: AspectRatio(
+          aspectRatio: ratio,
+          child: w,
+        ),
+        alignment: Alignment.center,
+        color: Colors.black,
+      ) ;
     }
 
 
 
-    return _textureId == null ? Container() : textureIdWidget;
-    //return Container();
+    //return _textureId == null ? Container() : textureIdWidget;
+    //return _textureId == null ? Container() : DefaultVideoWrapper(controller: widget.controller,textureId: _textureId);;
+    return Container();
   }
 }
 
@@ -104,9 +109,8 @@ class DefaultVideoWrapper extends StatelessWidget {
   final TencentPlayerController controller;
   final int textureId;
   const DefaultVideoWrapper({
-    Key key,
     this.controller, this.textureId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
