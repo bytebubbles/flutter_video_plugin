@@ -9,6 +9,9 @@ class ProgressSlider extends StatelessWidget {
   final ValueChanged<double> onChanged;
   final ValueChanged<double> onChangeStart;
   final ValueChanged<double> onChangeEnd;
+  final ValueChanged<double> onTap;
+  final ValueChanged<double> onPanEnd;
+  final ValueChanged<double> onVerticalDragCancel;
   final BorderRadiusGeometry borderRadius;
   final Widget pointWidget;
 
@@ -34,7 +37,8 @@ class ProgressSlider extends StatelessWidget {
       PaddleSliderValueIndicatorShape();
   static const ShowValueIndicator _defaultShowValueIndicator =
       ShowValueIndicator.onlyForDiscrete;
-
+  static double _startPosition;
+  static double _onDragCancelPosition;
   const ProgressSlider({
     Key key,
     @required this.value,
@@ -42,6 +46,9 @@ class ProgressSlider extends StatelessWidget {
     this.bufferValue,
     this.onChangeStart,
     this.onChangeEnd,
+    this.onTap,
+    this.onPanEnd,
+    this.onVerticalDragCancel,
     this.max = 1.0,
     this.min = 0.0,
     this.activeColor,
@@ -86,6 +93,7 @@ class ProgressSlider extends StatelessWidget {
     Size pointSize = sliderTheme.thumbShape.getPreferredSize(true, true);
     BorderRadiusGeometry _borderRadius =
         borderRadius ?? BorderRadius.circular(10);
+
     return Container(
       alignment: Alignment.centerLeft,
       child: LayoutBuilder(
@@ -114,7 +122,7 @@ class ProgressSlider extends StatelessWidget {
               return GestureDetector(
                 onPanDown: (DragDownDetails d) {
                   double x = _constraintsX(d.localPosition.dx);
-                  double _value = _lerpValue(x);
+                  double _value = _startPosition = _lerpValue(x);
                   if (_value != value) {
                     onChanged(_value);
                   }
@@ -129,12 +137,20 @@ class ProgressSlider extends StatelessWidget {
                 },
                 onPanUpdate: (DragUpdateDetails d) {
                   double x = _constraintsX(d.localPosition.dx);
-                  double _value = _lerpValue(x);
+                  double _value = _onDragCancelPosition = _lerpValue(x);
                   onChanged(_value);
                 },
                 onPanEnd: (DragEndDetails d) {
                   double _value = _lerpValue(value);
                   if (onChangeEnd != null) onChangeEnd(_value);
+                  if (onPanEnd != null) onPanEnd(_value);
+                },
+                onTap: () {
+                  if(_startPosition == null) return;
+                  onTap(_startPosition);
+                },
+                onVerticalDragCancel:(){
+                  if(onVerticalDragCancel != null) onVerticalDragCancel(_onDragCancelPosition);
                 },
                 child: Container(
                   color: Colors.transparent,
@@ -154,8 +170,8 @@ class ProgressSlider extends StatelessWidget {
                       ),
 
                       // 缓冲区
-                      if (_bufferValue != null)
-                        Positioned(
+
+                        _bufferValue != null ? Positioned(
                           left: 0,
                           child: Container(
                             height: sliderTheme.trackHeight,
@@ -166,7 +182,7 @@ class ProgressSlider extends StatelessWidget {
                               borderRadius: _borderRadius,
                             ),
                           ),
-                        ),
+                        ):Container(),
 
                       // current value
                       Positioned(

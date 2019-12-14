@@ -13,6 +13,8 @@ class PlayerConfig {
   final String coverImgUrl;
   final bool haveWifiAutoPlay;
 
+  final bool haveCacheAutoPlay;
+
   const PlayerConfig(
       {this.autoPlay = true,
         this.loop = false,
@@ -27,6 +29,7 @@ class PlayerConfig {
         this.coverImgUrl,
         this.defaultMute = false,
         this.haveWifiAutoPlay = false,
+        this.haveCacheAutoPlay = false,
       });
 
   PlayerConfig copyWith({
@@ -41,6 +44,7 @@ class PlayerConfig {
     String coverImgUrl,
     bool defaultMute,
     bool haveWifiAutoPlay,
+    bool haveCacheAutoPlay
   }){
     return PlayerConfig(
       autoPlay: autoPlay ?? this.autoPlay,
@@ -53,7 +57,8 @@ class PlayerConfig {
       switchCache: switchCache ?? this.switchCache,
       coverImgUrl: coverImgUrl ?? this.coverImgUrl,
       defaultMute: defaultMute ?? this.defaultMute,
-      haveWifiAutoPlay: haveWifiAutoPlay ?? this.haveWifiAutoPlay
+      haveWifiAutoPlay: haveWifiAutoPlay ?? this.haveWifiAutoPlay,
+      haveCacheAutoPlay: haveCacheAutoPlay ?? this.haveCacheAutoPlay
     );
   }
 

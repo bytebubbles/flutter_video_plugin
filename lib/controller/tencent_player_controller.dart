@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tencentplayer/flutter_tencentplayer.dart';
-
+import 'package:flutter_tencentplayer/model/TxCache.dart';
+import 'package:xml2json/xml2json.dart';
+import 'dart:convert';
 
 
 class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
@@ -72,6 +75,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
         break;
     }
     value = value.copyWith(isPlaying: playerConfig.autoPlay,playend: false, isMute: playerConfig.defaultMute);
+    //await _judgeCache(playerConfig);
     dataSourceDescription.addAll(playerConfig.toJson());
     final Map<String, dynamic> response =
     await channel.invokeMapMethod<String, dynamic>(
@@ -252,6 +256,75 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       'textureId': _textureId,
       "isMute":isMute
     });
+  }
+
+  void _judgeCache(PlayerConfig pConfig) async {
+    if(pConfig.autoPlay){
+      return;
+    }
+    print("---playerConfig.cachePath:${pConfig.cachePath}");
+    if(pConfig.cachePath != null && pConfig.haveCacheAutoPlay){
+      Xml2Json myTransformer = Xml2Json();
+      File file = File("${pConfig.cachePath}/txvodcache/tx_cache.xml");
+      print("----file:${file}");
+      print("----file:${file.existsSync()}");
+      String contents;
+      if(file.existsSync()){
+        try{
+          contents = await file.readAsString();
+        }catch(e){
+          print("---error:${e}");
+        }
+      }
+      if(contents == null) return;
+
+      print("contents:${contents}");
+      myTransformer.parse(contents);
+      List<TxCache> txCacheList = [];
+      var txCache = json.decode(myTransformer.toParker());
+      var cacheList = txCache["caches"]["cache"];
+      if(cacheList == null) return;
+
+      if(cacheList is List){
+        for(var item in cacheList){
+          txCacheList.add(TxCache(item));
+        }
+      }else {
+        txCacheList.add(TxCache(cacheList));
+      }
+
+      for(var item in txCacheList){
+        if(item.url == dataSource){
+          String path = item.path;
+          File fileInfo = File("${pConfig.cachePath}/txvodcache/${path}.info");
+          String contentInfo ;
+          if(fileInfo.existsSync()){
+            try{
+              contentInfo = await fileInfo.readAsString();
+            }catch(e){
+              print("---error:${e}");
+            }
+          }
+          if(contentInfo == null) return;
+
+          List<String> contentInfoAry = contentInfo.split("\n");
+          print("---contentInfoAry:${contentInfoAry}");
+          if(contentInfoAry != null && contentInfoAry.length >= 4){
+            int totalCache = int.parse(contentInfoAry[1]);
+            int currCache = int.parse(contentInfoAry[2]);
+            if(totalCache == currCache){
+              //已经缓存完成
+              print("已经缓存完成");
+              PlayerConfig newPlayerConfig = pConfig.copyWith(autoPlay: true);
+              playerConfig = newPlayerConfig;
+            }else if(totalCache > currCache){
+              print("未缓存完成：totalCache-${totalCache}, currCache-${currCache}");
+            }
+          }
+        }
+      }
+
+    }
   }
 
 }

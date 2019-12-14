@@ -1,14 +1,16 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_tencentplayer/controller/tencent_player_controller.dart';
 import 'package:flutter_tencentplayer/flutter_tencentplayer.dart';
+import 'package:flutter_tencentplayer_example/video/control_widget.dart';
+import 'package:flutter_tencentplayer_example/video/video_delegate.dart';
+import 'package:path_provider/path_provider.dart';
 
-import 'video/control_widget.dart';
-import 'video/video_delegate.dart';
+import 'utils/flutter_screenutil.dart';
 
 void main() => runApp(MyApp());
-final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+//final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
@@ -33,6 +35,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   TencentPlayerController controller;
+  NetPlayerControl netPlayerControl;
   Directory directory;
   int _counter = 0;
   String spe1 =
@@ -51,42 +54,55 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     // TODO: implement initState
+    initData();
     super.initState();
     //controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: false));
-    initData();
+
   }
 
   @override
   Widget build(BuildContext context) {
     ScreenUtil.instance = ScreenUtil(width: 720, height: 1280, allowFontScaling: false)..init(context);
     return Scaffold(
-      backgroundColor: Colors.red,
       body: MaterialApp(
-        color: Colors.red,
         home: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
-
-                /* width: ScreenUtil.getInstance().setWidth(400),
+/*                 width: ScreenUtil.getInstance().setWidth(400),
               height: ScreenUtil.getInstance().setWidth(400),*/
                 child: NetworkPlayerLifeCycle(
-                    controller: controller,
-                    childBuilder:(BuildContext context, TencentPlayerController controller) => AspectRatioVideo(controller)
+                    netPlayerControl: netPlayerControl,
+                    childBuilder:(BuildContext context, NetPlayerControl controller) => AspectRatioVideo(netPlayerControl)
                 ),
+              ),
+              FlatButton(
+                child: Text("dialog"),
+                onPressed: (){
+                  /*if(controller.isDisposed){
+                    String coverImg = null;
+
+                    controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: true,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
+                  }*/
+                  showDialog(
+                      barrierDismissible: false,
+                      context: context,
+                      builder: (s) {
+                        return NetworkPlayerList(spe3);
+                        /*return NetworkPlayerLifeCycle(
+                            controller: controller,
+                            childBuilder:(BuildContext context, TencentPlayerController controller) => Material(child: FullControl(controller,Axis.vertical),)
+                        );*/
+                      }
+                  );
+                },
               ),
               FlatButton(
                 child: Text("销毁"),
                 onPressed: (){
                   if(controller != null){
-                    if(controller.isDisposed){
-                      print("已销毁");
-
-                    }else {
-                      controller.dispose();
-                    }
-
+                    controller.dispose();
                   }
                 },
               ),
@@ -100,41 +116,24 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                 },
               ),
-              FlatButton(
-                child: Text("播放"),
 
-                onPressed: (){
-                  //print("---------------------暂停:${controller.hashCode}");
-                  /*if(controller != null){
-
-                    if(controller.isDisposed){
-                      print("已销毁");
-                      String coverImg = null;
-                      setState(() {
-                        controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: false,switchCache: true, coverImgUrl: coverImg, defaultMute: true),);
-                      });
-                    }else {
-                      controller.dispose();
-                    }
-
-                  }*/
-                },
-              ),
             ],
           ),
         ),
-        navigatorObservers: [routeObserver],
       ) ,
       // r build methods.
     );
   }
 
-  void initData()  {
+  void initData() async {
     //directory = await getTemporaryDirectory();
     //print("cachePath:${directory.path}");
     //String coverImg = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1574011235663&di=05b1a7ca666d55316d19f16bf2c4ab2b&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fblog%2F201510%2F20%2F20151020193329_rjWfs.jpeg";
     String coverImg = null;
-    controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: false,switchCache: false, coverImgUrl: coverImg, defaultMute: true),);
-    //controller.isMute(true);
+/*    directory = await getExternalStorageDirectory();
+    print("cachePath:${directory.path}");*/
+    netPlayerControl = NetPlayerControl(spe3,PlayerConfig(autoPlay: false,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
+    //controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: true,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
+    print("---------------------initData:${controller.hashCode}");
   }
 }

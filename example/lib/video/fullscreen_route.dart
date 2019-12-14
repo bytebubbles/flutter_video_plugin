@@ -42,7 +42,7 @@ class FullScreenRoute<T> extends DialogRoute<T> {
       builder: (BuildContext context, Widget child) {
         return Opacity(
           opacity: animation.value,
-          child: builder(context),
+          child: Material(child: builder(context),) ,
         );
       },
     );
