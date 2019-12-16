@@ -8,6 +8,7 @@ class PlayerConfig {
   final int startTime;
   final Map<String, dynamic> auth;
   final bool defaultMute;
+  final bool autoLoading;
   //----- 拓展属性 ---
   final bool switchCache;
   final String coverImgUrl;
@@ -30,6 +31,7 @@ class PlayerConfig {
         this.defaultMute = false,
         this.haveWifiAutoPlay = false,
         this.haveCacheAutoPlay = false,
+        this.autoLoading = false,
       });
 
   PlayerConfig copyWith({
@@ -44,7 +46,8 @@ class PlayerConfig {
     String coverImgUrl,
     bool defaultMute,
     bool haveWifiAutoPlay,
-    bool haveCacheAutoPlay
+    bool haveCacheAutoPlay,
+    bool autoLoading,
   }){
     return PlayerConfig(
       autoPlay: autoPlay ?? this.autoPlay,
@@ -58,7 +61,8 @@ class PlayerConfig {
       coverImgUrl: coverImgUrl ?? this.coverImgUrl,
       defaultMute: defaultMute ?? this.defaultMute,
       haveWifiAutoPlay: haveWifiAutoPlay ?? this.haveWifiAutoPlay,
-      haveCacheAutoPlay: haveCacheAutoPlay ?? this.haveCacheAutoPlay
+      haveCacheAutoPlay: haveCacheAutoPlay ?? this.haveCacheAutoPlay,
+      autoLoading: autoLoading ?? this.autoLoading
     );
   }
 
@@ -72,6 +76,6 @@ class PlayerConfig {
     'auth': this.auth,
     'switchCache': this.switchCache,
     'defaultMute': this.defaultMute,
-
+    'autoLoading': this.autoLoading,
   };
 }

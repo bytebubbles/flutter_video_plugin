@@ -43,27 +43,10 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     netPlayerControl = createNetPlayerControl();
     controller = netPlayerControl.controller;
     _linster = (){
-      if(controller.value.isDisconnect && !controller.value.isFullScreen/*||(controller.playerConfig.switchCache && controller.value.reconnectCount > 0)*/){
-        /*if(controller.playerConfig.switchCache && controller.value.reconnectCount ==1 && count == 0){
-          print("----fate----");
-          count++;
-          controller.pause();
-          controller.isMute(true);
-        }*/
-        //controller.dispose();
-        //isHideTryButton = false;
+      if(controller.value.isDisconnect && !controller.value.isFullScreen){
+
         isReplay = true;
-        //Fluttertoast.showToast(msg: "播放错误：网络异常",gravity: ToastGravity.CENTER);
       }
-      /*if (controller.value.hasError) {
-        print("-----------controller.value.errorDescription---------");
-        if(controller.value.errorDescription == "网络断开，播放错误"){
-          Fluttertoast.showToast(msg: "网络断开，播放错误");
-        }else {
-          Fluttertoast.showToast(msg: "播放错误");
-        }
-      }*/
-      print("---initState:${controller.value.playend}");
       setState(() {});
     };
     _haveWifiAutoPlay();
@@ -176,7 +159,28 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
       controlWidget = Image.asset("halfoff/images/img_place_hold.png",fit: BoxFit.cover,);
     }else {
       if(!controller.playerConfig.autoPlay && !controller.value.initialized){
-        Widget coverImg;
+        if(!controller.value.initialized){
+          _initVideo();
+        }
+        controlWidget = Stack(
+          children: <Widget>[
+
+            Material(child: widget.childBuilder(context, netPlayerControl),),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              top: 0,
+              child:  Center(
+                child: Offstage(
+                  offstage: controller.value.initialized,
+                  child: Center(child: const CircularProgressIndicator(),),
+                ),
+              ),
+            ),
+          ],
+        );
+        /*Widget coverImg;
         if(controller.playerConfig.coverImgUrl != null && controller.playerConfig.coverImgUrl != ""){
           coverImg = CachedNetworkImage(
             imageUrl: controller.playerConfig.coverImgUrl,
@@ -209,7 +213,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
               )
             ],
           ),
-        );
+        );*/
       }else {
         if(!controller.value.initialized){
           _initVideo();

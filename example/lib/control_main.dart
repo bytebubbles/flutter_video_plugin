@@ -5,6 +5,7 @@ import 'package:flutter_tencentplayer/controller/tencent_player_controller.dart'
 import 'package:flutter_tencentplayer/flutter_tencentplayer.dart';
 import 'package:flutter_tencentplayer_example/video/control_widget.dart';
 import 'package:flutter_tencentplayer_example/video/video_delegate.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'utils/flutter_screenutil.dart';
@@ -132,8 +133,15 @@ class _MyHomePageState extends State<MyHomePage> {
     String coverImg = null;
 /*    directory = await getExternalStorageDirectory();
     print("cachePath:${directory.path}");*/
-    netPlayerControl = NetPlayerControl(spe3,PlayerConfig(autoPlay: false,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
+    netPlayerControl = NetPlayerControl(spe3,PlayerConfig(autoLoading: false,autoPlay: false,switchCache: true, haveCacheAutoPlay: true, coverImgUrl: coverImg,defaultMute: true),);
     //controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: true,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
+    netPlayerControl.controller.isHasCacheCallback = (hasCache){
+      if(hasCache){
+        Fluttertoast.showToast(msg: "该视频已缓存");
+      }else {
+        Fluttertoast.showToast(msg: "请注意流量消耗");
+      }
+    };
     print("---------------------initData:${controller.hashCode}");
   }
 }

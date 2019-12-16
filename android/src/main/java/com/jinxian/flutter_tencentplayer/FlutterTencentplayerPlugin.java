@@ -44,6 +44,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
     private static class TencentPlayer implements ITXVodPlayListener {
         private TXVodPlayer mVodPlayer;
+
         TXVodPlayConfig mPlayConfig;
         private Surface surface;
         TXPlayerAuthBuilder authBuilder;
@@ -56,6 +57,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
         private final Registrar mRegistrar;
 
+        private boolean isSetPlaySource;
 
 
         TencentPlayer(
@@ -76,7 +78,9 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
             setFlutterBridge(eventChannel, textureEntry, result);
 
-            setPlaySource(call);
+            setInitPlayState(call);
+
+            //setPlaySource(call);
         }
 
 
@@ -132,6 +136,23 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             result.success(reply);
         }
 
+        private void setInitPlayState(MethodCall call){
+            boolean autoPlay = (boolean) call.argument("autoPlay");
+            boolean autoLoading = (boolean) call.argument("autoLoading");
+            if(autoPlay){
+                setPlaySource(call);
+            }else {
+                if(autoLoading){
+                    setPlaySource(call);
+                }else {
+                    isSetPlaySource = false;
+                }
+            }
+            Map<String, Object> preparedMap = new HashMap<>();
+            preparedMap.put("event", "initialized");
+            eventSink.success(preparedMap);
+        }
+
         private void setPlaySource(MethodCall call) {
             // network FileId播放
             if (call.argument("auth") != null) {
@@ -170,6 +191,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                     mVodPlayer.startPlay(call.argument("uri").toString());
                 }
             }
+            isSetPlaySource = true;
         }
 
         // 播放器监听1
@@ -179,7 +201,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                 //准备阶段
                 case TXLiveConstants.PLAY_EVT_VOD_PLAY_PREPARED:
                     Map<String, Object> preparedMap = new HashMap<>();
-                    preparedMap.put("event", "initialized");
+                    preparedMap.put("event", "prepared");
                     preparedMap.put("duration", (int) player.getDuration());
                     preparedMap.put("width", player.getWidth());
                     preparedMap.put("height", player.getHeight());
@@ -248,10 +270,16 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             eventSink.success(netStatusMap);
         }
 
-        void play() {
-            if (!mVodPlayer.isPlaying()) {
-                mVodPlayer.resume();
+        void play(MethodCall call) {
+            if (isSetPlaySource){
+                if (!mVodPlayer.isPlaying()) {
+                    mVodPlayer.resume();
+                }
+                return ;
             }
+            mVodPlayer.setAutoPlay(true);
+            setPlaySource(call);
+
         }
 
         void pause() {
@@ -496,7 +524,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
     private void onMethodCall(MethodCall call, Result result, long textureId, TencentPlayer player) {
         switch (call.method) {
             case "play":
-                player.play();
+                player.play(call);
                 result.success(null);
                 break;
             case "pause":
