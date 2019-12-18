@@ -9,12 +9,6 @@ class PlayerConfig {
   final Map<String, dynamic> auth;
   final bool defaultMute;
   final bool autoLoading;
-  //----- 拓展属性 ---
-  final bool switchCache;
-  final String coverImgUrl;
-  final bool haveWifiAutoPlay;
-
-  final bool haveCacheAutoPlay;
 
   const PlayerConfig(
       {this.autoPlay = true,
@@ -26,11 +20,7 @@ class PlayerConfig {
         this.progressInterval = 200,
         this.startTime,
         this.auth,
-        this.switchCache = false,
-        this.coverImgUrl,
         this.defaultMute = false,
-        this.haveWifiAutoPlay = false,
-        this.haveCacheAutoPlay = false,
         this.autoLoading = false,
       });
 
@@ -57,11 +47,7 @@ class PlayerConfig {
       progressInterval: progressInterval ?? this.progressInterval,
       startTime: startTime ?? this.startTime,
       auth: auth ?? this.auth,
-      switchCache: switchCache ?? this.switchCache,
-      coverImgUrl: coverImgUrl ?? this.coverImgUrl,
       defaultMute: defaultMute ?? this.defaultMute,
-      haveWifiAutoPlay: haveWifiAutoPlay ?? this.haveWifiAutoPlay,
-      haveCacheAutoPlay: haveCacheAutoPlay ?? this.haveCacheAutoPlay,
       autoLoading: autoLoading ?? this.autoLoading
     );
   }
@@ -74,7 +60,6 @@ class PlayerConfig {
     'progressInterval': this.progressInterval,
     'startTime': this.startTime,
     'auth': this.auth,
-    'switchCache': this.switchCache,
     'defaultMute': this.defaultMute,
     'autoLoading': this.autoLoading,
   };

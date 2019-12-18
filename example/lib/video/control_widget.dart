@@ -351,11 +351,8 @@ class _VideoFrameState extends State<VideoFrame>  with  SingleTickerProviderStat
       fit: StackFit.passthrough,
       children: <Widget>[
         GestureDetector(
-          child: TencentPlayer(txController)/*Container(color: Colors.black,)*/,
+          child: TencentPlayer(txController),
           onTap: (){
-            /*if (!controller.controller.value.initialized) {
-              return;
-            }*/
             resetHideCountDown();
           },
         ),
@@ -674,7 +671,7 @@ class _FullControlState extends State<FullControl> with SingleTickerProviderStat
     return Future.value(isWifiEnv);
   }
   _processController() async {
-    if(controller.playerConfig.switchCache){
+    if(controller.playerConfigDelegate.switchCache){
       directory = await getTemporaryDirectory();
       print("-------cache_path:${directory.path}");
       PlayerConfig playerConfig = controller.playerConfig.copyWith(cachePath: directory.path);

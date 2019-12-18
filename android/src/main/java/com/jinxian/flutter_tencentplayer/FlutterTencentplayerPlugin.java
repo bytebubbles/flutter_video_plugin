@@ -1,6 +1,7 @@
 package com.jinxian.flutter_tencentplayer;
 
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.LongSparseArray;
@@ -19,6 +20,7 @@ import io.flutter.view.TextureRegistry;
 
 import com.tencent.rtmp.ITXVodPlayListener;
 import com.tencent.rtmp.TXLiveConstants;
+import com.tencent.rtmp.TXLivePlayer;
 import com.tencent.rtmp.TXPlayerAuthBuilder;
 import com.tencent.rtmp.TXVodPlayConfig;
 import com.tencent.rtmp.TXVodPlayer;
@@ -150,6 +152,13 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             }
             Map<String, Object> preparedMap = new HashMap<>();
             preparedMap.put("event", "initialized");
+            mVodPlayer.snapshot(new TXLivePlayer.ITXSnapshotListener(){
+
+                @Override
+                public void onSnapshot(Bitmap bitmap) {
+                    System.out.print("-----onSnapshot"+bitmap);
+                }
+            });
             eventSink.success(preparedMap);
         }
 

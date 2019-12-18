@@ -17,7 +17,7 @@ dependencies:
   cached_network_image: 1.1.1
   connectivity: 0.4.2
   fluttertoast: ^3.0.3
-
+  video_player: 0.10.2+5
 dev_dependencies:
   flutter_test:
     sdk: flutter

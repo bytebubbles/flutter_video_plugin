@@ -129,19 +129,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void initData() async {
     //directory = await getTemporaryDirectory();
     //print("cachePath:${directory.path}");
-    //String coverImg = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1574011235663&di=05b1a7ca666d55316d19f16bf2c4ab2b&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fblog%2F201510%2F20%2F20151020193329_rjWfs.jpeg";
-    String coverImg = null;
+    String coverImg = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1574011235663&di=05b1a7ca666d55316d19f16bf2c4ab2b&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fblog%2F201510%2F20%2F20151020193329_rjWfs.jpeg";
+    //String coverImg = null;
 /*    directory = await getExternalStorageDirectory();
     print("cachePath:${directory.path}");*/
-    netPlayerControl = NetPlayerControl(spe3,PlayerConfig(autoLoading: false,autoPlay: false,switchCache: true, haveCacheAutoPlay: true, coverImgUrl: coverImg,defaultMute: true),);
+    //netPlayerControl = NetPlayerControl(spe3,PlayerConfig(autoLoading: false,autoPlay: false,switchCache: true, haveCacheAutoPlay: true, coverImgUrl: coverImg,defaultMute: true),);
+    netPlayerControl = NetPlayerControl(spe3,PlayerConfigDelegate(coverImgUrl: coverImg,switchCache: false,haveCacheAutoPlay: false,haveWifiAutoPlay: false,txPlayerConfig: PlayerConfig(autoPlay: false,autoLoading: false)));
     //controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: true,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
-    netPlayerControl.controller.isHasCacheCallback = (hasCache){
-      if(hasCache){
-        Fluttertoast.showToast(msg: "该视频已缓存");
-      }else {
-        Fluttertoast.showToast(msg: "请注意流量消耗");
-      }
-    };
     print("---------------------initData:${controller.hashCode}");
   }
 }

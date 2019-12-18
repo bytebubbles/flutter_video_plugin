@@ -19,6 +19,7 @@ class TencentPlayerValue {
   final bool isFullScreen;
   final bool initialized;
   final bool prepared;
+  final bool hasCache;
 
   //bool get initialized => duration.inMilliseconds != 0;
 
@@ -44,7 +45,8 @@ class TencentPlayerValue {
     this.isDisconnect = false,
     this.isFullScreen = false,
     this.initialized = false,
-    this.prepared = false
+    this.prepared = false,
+    this.hasCache = false,
   });
 
   TencentPlayerValue copyWith({
@@ -65,6 +67,7 @@ class TencentPlayerValue {
     bool isFullScreen,
     bool initialized,
     bool prepared,
+    bool hasCache,
   }) {
     return TencentPlayerValue(
       duration: duration ?? this.duration,
@@ -85,6 +88,7 @@ class TencentPlayerValue {
       isFullScreen: isFullScreen ?? this.isFullScreen,
       initialized: initialized ?? this.initialized,
       prepared: prepared ?? this.prepared,
+      hasCache: hasCache ?? this.hasCache,
     );
   }
 
