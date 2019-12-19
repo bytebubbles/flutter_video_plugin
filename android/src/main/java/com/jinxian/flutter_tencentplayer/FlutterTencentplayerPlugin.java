@@ -2,6 +2,7 @@ package com.jinxian.flutter_tencentplayer;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.LongSparseArray;
@@ -29,6 +30,7 @@ import com.tencent.rtmp.downloader.TXVodDownloadDataSource;
 import com.tencent.rtmp.downloader.TXVodDownloadManager;
 import com.tencent.rtmp.downloader.TXVodDownloadMediaInfo;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -152,14 +154,31 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             }
             Map<String, Object> preparedMap = new HashMap<>();
             preparedMap.put("event", "initialized");
-            mVodPlayer.snapshot(new TXLivePlayer.ITXSnapshotListener(){
+            /*mVodPlayer.snapshot(new TXLivePlayer.ITXSnapshotListener(){
 
                 @Override
                 public void onSnapshot(Bitmap bitmap) {
                     System.out.print("-----onSnapshot"+bitmap);
+                    Map<String, Object> preparedMap = new HashMap<>();
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    byte[] byteArray = stream.toByteArray();
+                    bitmap.recycle();
+                    preparedMap.put("event", "snapshot");
+                    preparedMap.put("snapshot", byteArray);
+                    eventSink.success(preparedMap);
                 }
-            });
+            });*/
+            Bitmap bitmap = getNetVideoBitmap(call.argument("uri").toString());
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            bitmap.recycle();
+            //preparedMap.put("event", "snapshot");
+            preparedMap.put("snapshot", byteArray);
+            //eventSink.success(preparedMap);
             eventSink.success(preparedMap);
+
         }
 
         private void setPlaySource(MethodCall call) {
@@ -581,5 +600,22 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
     private void onDestroy() {
         disposeAllPlayers();
+    }
+
+    public static Bitmap getNetVideoBitmap(String videoUrl) {
+        Bitmap bitmap = null;
+
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        try {
+            //根据url获取缩略图
+            retriever.setDataSource(videoUrl, new HashMap());
+            //获得第一帧图片
+            bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } finally {
+            retriever.release();
+        }
+        return bitmap;
     }
 }

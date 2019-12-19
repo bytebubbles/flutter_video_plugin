@@ -98,6 +98,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
         case 'initialized':
           print("-----initialized");
           value = value.copyWith(initialized: true);
+          print("------initialized_snapshot:${map['snapshot']}");
           if(!initializingCompleter.isCompleted) initializingCompleter.complete(null);
           break;
         case 'prepared':
@@ -150,7 +151,9 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
           print("-------myPlayer:disconnect--------");
           value = value.copyWith(isDisconnect: true);
           break;
-
+        case 'snapshot':
+          print("------snapshot:${map['snapshot']}");
+          break;
       }
     }
 
