@@ -4,10 +4,14 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Base64;
 import android.util.LongSparseArray;
+import android.util.Xml;
 import android.view.Surface;
 
+import io.flutter.Log;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -21,7 +25,6 @@ import io.flutter.view.TextureRegistry;
 
 import com.tencent.rtmp.ITXVodPlayListener;
 import com.tencent.rtmp.TXLiveConstants;
-import com.tencent.rtmp.TXLivePlayer;
 import com.tencent.rtmp.TXPlayerAuthBuilder;
 import com.tencent.rtmp.TXVodPlayConfig;
 import com.tencent.rtmp.TXVodPlayer;
@@ -30,12 +33,19 @@ import com.tencent.rtmp.downloader.TXVodDownloadDataSource;
 import com.tencent.rtmp.downloader.TXVodDownloadManager;
 import com.tencent.rtmp.downloader.TXVodDownloadMediaInfo;
 
+import org.xmlpull.v1.XmlPullParser;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -45,7 +55,6 @@ import java.util.Map;
 public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
     ///////////////////// TencentPlayer 开始////////////////////
-
     private static class TencentPlayer implements ITXVodPlayListener {
         private TXVodPlayer mVodPlayer;
 
@@ -62,7 +71,6 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
         private final Registrar mRegistrar;
 
         private boolean isSetPlaySource;
-
 
         TencentPlayer(
                 Registrar mRegistrar,
@@ -140,7 +148,7 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             result.success(reply);
         }
 
-        private void setInitPlayState(MethodCall call){
+        private void setInitPlayState(final MethodCall call){
             boolean autoPlay = (boolean) call.argument("autoPlay");
             boolean autoLoading = (boolean) call.argument("autoLoading");
             if(autoPlay){
@@ -152,32 +160,45 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                     isSetPlaySource = false;
                 }
             }
-            Map<String, Object> preparedMap = new HashMap<>();
+            final Map<String, Object> preparedMap = new HashMap<>();
             preparedMap.put("event", "initialized");
-            /*mVodPlayer.snapshot(new TXLivePlayer.ITXSnapshotListener(){
-
-                @Override
-                public void onSnapshot(Bitmap bitmap) {
-                    System.out.print("-----onSnapshot"+bitmap);
-                    Map<String, Object> preparedMap = new HashMap<>();
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                    byte[] byteArray = stream.toByteArray();
-                    bitmap.recycle();
-                    preparedMap.put("event", "snapshot");
-                    preparedMap.put("snapshot", byteArray);
-                    eventSink.success(preparedMap);
-                }
-            });*/
-            Bitmap bitmap = getNetVideoBitmap(call.argument("uri").toString());
+            /*Bitmap bitmap = getNetVideoBitmap(call.argument("uri").toString());
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
             byte[] byteArray = stream.toByteArray();
             bitmap.recycle();
-            //preparedMap.put("event", "snapshot");
-            preparedMap.put("snapshot", byteArray);
-            //eventSink.success(preparedMap);
-            eventSink.success(preparedMap);
+            preparedMap.put("snapshot", byteArray);*/
+
+            final Handler handler = new Handler(){
+                @Override
+                public void handleMessage(Message msg) {
+
+                    //final Map<String, Object> preparedMap = new HashMap<>();
+                    preparedMap.put("snapshot", msg.getData().getByteArray("byteArray"));
+                    ArrayList<String> videoCacheInfoAry = msg.getData().getStringArrayList("videoCacheInfoAry");
+                    preparedMap.put("cacheState", videoCacheInfoAry);
+                    eventSink.success(preparedMap);
+                }
+            };
+
+            new Thread(){
+                @Override
+                public void run() {
+                    Message msg = new Message();
+                    Bitmap bitmap = getNetVideoBitmap(call.argument("uri").toString());
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                    byte[] byteArray = stream.toByteArray();
+                    bitmap.recycle();
+                    Bundle bundle = new Bundle();
+                    bundle.putByteArray("byteArray",byteArray);
+                    msg.setData(bundle);
+
+                    ArrayList<String> videoCacheInfoAry = getVideoCacheInfo(call);
+                    bundle.putStringArrayList("videoCacheInfoAry",videoCacheInfoAry);
+                    handler.sendMessage(msg);
+                }
+            }.start();
 
         }
 
@@ -467,17 +488,18 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
     }
     ////////////////////  TencentDownload 结束/////////////////
+
+
     private final Registrar registrar;
     private final LongSparseArray<TencentPlayer> videoPlayers;
+    private final LongSparseArray<MethodCall> methodCalls;
     private final HashMap<String, TencentDownload> downloadManagerMap;
 
     private FlutterTencentplayerPlugin(Registrar registrar) {
         this.registrar = registrar;
         this.videoPlayers = new LongSparseArray<>();
+        this.methodCalls = new LongSparseArray<>();
         this.downloadManagerMap = new HashMap<>();
-
-
-
     }
 
 
@@ -517,9 +539,9 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
                 EventChannel eventChannel = new EventChannel(registrar.messenger(), "flutter_tencentplayer/videoEvents" + handle.id());
 
-
                 TencentPlayer player = new TencentPlayer(registrar, eventChannel, handle, call, result);
                 videoPlayers.put(handle.id(), player);
+                methodCalls.put(handle.id(), call);
                 break;
             case "download":
                 String urlOrFileId = call.argument("urlOrFileId").toString();
@@ -575,14 +597,16 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                 result.success(null);
                 break;
             case "dispose":
-                player.dispose();
-                videoPlayers.remove(textureId);
-                result.success(null);
+                disposePlayer(result,player,textureId);
                 break;
             case "mute":
                 boolean isMute = ((Boolean) call.argument("isMute")).booleanValue();
                 player.setMute(isMute);
                 result.success(null);
+                break;
+            case "getCacheState":
+                getCacheState(result,textureId);
+                break;
             default:
                 result.notImplemented();
                 break;
@@ -590,12 +614,48 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
     }
 
+    private void getCacheState(final Result result, long textureId){
+
+        final MethodCall call = methodCalls.get(textureId);
+        if(call.argument("cachePath") == null) {
+            result.success(null);
+            return ;
+        }
+
+        final Handler handler = new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                ArrayList<String> videoCacheInfoAry = msg.getData().getStringArrayList("videoCacheInfoAry");
+                result.success(videoCacheInfoAry);
+            }
+        };
+        new Thread(){
+            @Override
+            public void run() {
+                ArrayList<String> videoCacheInfoAry = getVideoCacheInfo(call);
+                Bundle bundle = new Bundle();
+                bundle.putStringArrayList("videoCacheInfoAry",videoCacheInfoAry);
+                Message message = new Message();
+                message.setData(bundle);
+                handler.sendMessage(message);
+            }
+        }.start();
+
+    }
+
+    private void disposePlayer(Result result,TencentPlayer player, long textureId){
+        player.dispose();
+        videoPlayers.remove(textureId);
+        methodCalls.remove(textureId);
+        result.success(null);
+    }
 
     private void disposeAllPlayers() {
         for (int i = 0; i < videoPlayers.size(); i++) {
             videoPlayers.valueAt(i).dispose();
         }
         videoPlayers.clear();
+        methodCalls.clear();
     }
 
     private void onDestroy() {
@@ -617,5 +677,129 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             retriever.release();
         }
         return bitmap;
+    }
+
+    private static ArrayList<String> getVideoCacheInfo( MethodCall call){
+
+        ArrayList<String> videoCacheInfoAry = new ArrayList<>();
+        List<TXCacheXMLItemBean> videoCacheItems = null;
+        TXCacheXMLItemBean item = null;
+        FileInputStream txCacheFileInStream = null;
+        BufferedReader reader = null;
+        try{
+            String txCachePath = call.argument("cachePath").toString()+"/txvodcache/tx_cache.xml";
+            Log.d("TXVideoPlayer",txCachePath);
+            File txCacheFile = new File(txCachePath);
+            if(txCacheFile.exists()){
+                txCacheFileInStream = new FileInputStream(txCacheFile);
+                XmlPullParser xmlPullParser = Xml.newPullParser();
+                xmlPullParser.setInput(txCacheFileInStream,"utf-8");
+                int type = xmlPullParser.getEventType();
+
+                while(type != XmlPullParser.END_DOCUMENT){
+                    switch (type){
+                        case XmlPullParser.START_TAG:
+                            if("caches".equals(xmlPullParser.getName())){
+                                videoCacheItems = new ArrayList<>();
+                            }else if("cache".equals(xmlPullParser.getName())){
+                                item = new TXCacheXMLItemBean();
+                            }else if("path".equals(xmlPullParser.getName())){
+                                item.setPath(xmlPullParser.nextText());
+                            }else if("time".equals(xmlPullParser.getName())){
+                                item.setTime(xmlPullParser.nextText());
+                            }else if("url".equals(xmlPullParser.getName())){
+                                item.setUrl(xmlPullParser.nextText());
+                            }else if("fileType".equals(xmlPullParser.getName())){
+                                item.setFileType(xmlPullParser.nextText());
+                            }
+                            break;
+                        case XmlPullParser.END_TAG:
+                            if("cache".equals(xmlPullParser.getName())){
+                                if(videoCacheItems != null && item != null) videoCacheItems.add(item);
+                            }
+                            break;
+                    }
+                    type = xmlPullParser.next();
+                }
+                Log.d("TXVideoPlayer",videoCacheItems.toString());
+                if(videoCacheItems != null && videoCacheItems.size() > 0){
+                    for(TXCacheXMLItemBean itemBean : videoCacheItems){
+                        if(itemBean.getUrl().equals(call.argument("uri"))){
+                            String videoInfoPath = call.argument("cachePath").toString() + "/txvodcache/"+itemBean.getPath()+".info";
+                            File videoInfoFile = new File(videoInfoPath);
+                            reader = new BufferedReader(new FileReader(videoInfoFile));
+                            String tempStr = null;
+                            while ((tempStr = reader.readLine()) != null){
+                                videoCacheInfoAry.add(tempStr);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }else {
+                Log.e("TXVideoPlayer","没找到");
+            }
+
+        }catch (Exception e){
+            Log.e("TXVideoPlayer",e.getMessage());
+        }finally {
+            if(txCacheFileInStream != null){
+                try {
+                    txCacheFileInStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if(reader != null){
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+        return videoCacheInfoAry;
+    }
+}
+
+
+class TXCacheXMLItemBean {
+    private String path;
+    private String time;
+    private String url;
+    private String fileType;
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
     }
 }

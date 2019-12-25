@@ -17,6 +17,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
   Map<dynamic, dynamic> dataSourceDescription;
   NewStartPlayCallback newStartPlayCallback;
   bool isNewStartPlay;
+  dynamic coverFrame;
   // ignore: unnecessary_getters_setters
   set playerConfig(PlayerConfig playerConfig) {
     assert ((){
@@ -78,7 +79,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
         break;
     }
     value = value.copyWith(isPlaying: playerConfig.autoPlay,playend: false, isMute: playerConfig.defaultMute);
-    await _getCacheState();
+    //await getCacheState();
     dataSourceDescription.addAll(playerConfig.toJson());
     final Map<String, dynamic> response =
     await channel.invokeMapMethod<String, dynamic>(
@@ -86,6 +87,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       dataSourceDescription,
     );
     _textureId = response['textureId'];
+    print("textureID:${_textureId}");
     _creatingCompleter.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
 
@@ -97,8 +99,9 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       switch (map['event']) {
         case 'initialized':
           print("-----initialized");
-          value = value.copyWith(initialized: true);
-          print("------initialized_snapshot:${map['snapshot']}");
+          value = value.copyWith(initialized: true, hasCache: _judgeCacheState(map['cacheState']));
+          coverFrame = map['snapshot'];
+          //print("------initialized_snapshot:${map['snapshot']}");
           if(!initializingCompleter.isCompleted) initializingCompleter.complete(null);
           break;
         case 'prepared':
@@ -153,6 +156,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
           break;
         case 'snapshot':
           print("------snapshot:${map['snapshot']}");
+          //coverFrame = map['snapshot'];
           break;
       }
     }
@@ -210,10 +214,10 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       //await channel.invokeMethod('play', <String, dynamic>{'textureId': _textureId, 'config':dataSourceDescription});
 
       if(isNewStartPlay == null || isNewStartPlay){
-        await _getCacheState();
-        if(newStartPlayCallback != null) newStartPlayCallback();
+        getCacheState();
+        //if(newStartPlayCallback != null) newStartPlayCallback();
       }
-      isNewStartPlay = false;
+
       await channel.invokeMethod('play', dataSourceDescription);
     } else {
       //await channel.invokeMethod('pause', <String, dynamic>{'textureId': _textureId,'config':dataSourceDescription});
@@ -269,6 +273,8 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
     value = value.copyWith(rate: rate);
   }
 
+
+
   Future<void> _applyIsMute(bool isMute) async {
     if(_isDisposed){
       return ;
@@ -279,15 +285,36 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
     });
   }
 
-  _getCacheState() async {
-    if(playerConfig.cachePath == null) return;
-    bool hasCache = await isHasCacheFinish() ?? false;
+  Future<void> getCacheState()async{
+    var videoCacheInfoAry =  await channel.invokeMethod('getCacheState', <String, dynamic>{
+      'textureId': _textureId,
+    });
+    print("videoCacheInfoAry:${videoCacheInfoAry}");
+    bool hasCache = _judgeCacheState(videoCacheInfoAry) ?? false;
     value = value.copyWith(hasCache: hasCache);
+    if(newStartPlayCallback != null) newStartPlayCallback();
+    isNewStartPlay = false;
   }
 
-  Future<bool> isHasCacheFinish(){
-    return isHasCacheFinishForCachePath(dataSource, playerConfig.cachePath);
+  bool _judgeCacheState(var videoCacheInfoAry) {
+      if(videoCacheInfoAry != null && videoCacheInfoAry is List && videoCacheInfoAry.length >= 3){
+        int totalCache = int.parse(videoCacheInfoAry[1]);
+        int currCache = int.parse(videoCacheInfoAry[2]);
+        if(totalCache == currCache){
+          //已经缓存完成
+          print("已经缓存完成");
+          return true;
+        }else if(totalCache > currCache){
+          print("未缓存完成：totalCache-${totalCache}, currCache-${currCache}");
+          return false;
+        }
+      }
+      return false;
   }
+
+  /*Future<bool> isHasCacheFinish(){
+    return isHasCacheFinishForCachePath(dataSource, playerConfig.cachePath);
+  }*/
 
 }
 
@@ -310,9 +337,11 @@ Future<bool> isHasCacheFinishForCachePath( String url ,String cachePath) async {
     if(contents == null) return Future.value(null);
 
     print("contents:${contents}");
+    //return Future.value(null);
     myTransformer.parse(contents);
     List<TxCache> txCacheList = [];
     var txCache = json.decode(myTransformer.toParker());
+    print("---txCache:${txCache}");
     var cacheList = txCache["caches"]["cache"];
     if(cacheList == null) return Future.value(null);
 

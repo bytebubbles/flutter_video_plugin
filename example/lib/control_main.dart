@@ -37,6 +37,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   TencentPlayerController controller;
   NetPlayerControl netPlayerControl;
+  NetPlayerControl netPlayerControl2;
   Directory directory;
   int _counter = 0;
   String spe1 =
@@ -45,6 +46,9 @@ class _MyHomePageState extends State<MyHomePage> {
       'http://1252463788.vod2.myqcloud.com/95576ef5vodtransgzp1252463788/e1ab85305285890781763144364/v.f20.mp4';
   String spe3 =
       'http://1252463788.vod2.myqcloud.com/95576ef5vodtransgzp1252463788/e1ab85305285890781763144364/v.f30.mp4';
+  String spe4 =
+      'https://img.mc.titilife.com/uploads/20191112/ED9E3F1B2DDC93EE04ABBE2874AFFA8E.mp4';
+
   void _incrementCounter() {
     //VolumeWatcher.setVolume(_counter*2.0);
     setState(() {
@@ -64,61 +68,88 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     ScreenUtil.instance = ScreenUtil(width: 720, height: 1280, allowFontScaling: false)..init(context);
+    List<Widget> items = [];
+    items.add(NetworkPlayerLifeCycle(
+        netPlayerControl: netPlayerControl,
+        childBuilder:(BuildContext context, NetPlayerControl controller) => AspectRatioVideo(netPlayerControl)
+    ),);
+    items.add(NetworkPlayerLifeCycle(
+        netPlayerControl: netPlayerControl2,
+        childBuilder:(BuildContext context, NetPlayerControl controller) => AspectRatioVideo(netPlayerControl2)
+    ),);
+
     return Scaffold(
       body: MaterialApp(
-        home: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-/*                 width: ScreenUtil.getInstance().setWidth(400),
-              height: ScreenUtil.getInstance().setWidth(400),*/
-                child: NetworkPlayerLifeCycle(
-                    netPlayerControl: netPlayerControl,
-                    childBuilder:(BuildContext context, NetPlayerControl controller) => AspectRatioVideo(netPlayerControl)
+        home: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                /*Container(
+                  padding: EdgeInsets.only(top: 200),
+                  child: NetworkPlayerLifeCycle(
+                      netPlayerControl: netPlayerControl,
+                      childBuilder:(BuildContext context, NetPlayerControl controller) => AspectRatioVideo(netPlayerControl)
+                  ),
+                ),*/
+                Container(
+                  width: getWidth(),
+                  height: getWidth(),
+                  child: PageView.custom(
+                      childrenDelegate: SliverChildBuilderDelegate(
+                          (BuildContext context, int index){
+                            return KeepAlive(
+                              widget: items[index],
+                              key: ValueKey<String>("1234"),
+                            );
+                          },
+                        childCount: 2,
+                      )
+                  ),
                 ),
-              ),
-              FlatButton(
-                child: Text("dialog"),
-                onPressed: (){
-                  /*if(controller.isDisposed){
-                    String coverImg = null;
+                FlatButton(
+                  child: Text("dialog"),
+                  onPressed: (){
+                    showDialog(
+                        barrierDismissible: false,
+                        context: context,
+                        builder: (s) {
+                          return NetworkPlayerList(spe3);
+                        }
+                    );
+                  },
+                ),
+                FlatButton(
+                  child: Text("销毁"),
+                  onPressed: (){
+                    if(netPlayerControl.controller != null){
+                      netPlayerControl.controller.dispose();
+                    }
+                  },
+                ),
+                FlatButton(
+                  child: Text("暂停"),
 
-                    controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: true,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
-                  }*/
-                  showDialog(
-                      barrierDismissible: false,
-                      context: context,
-                      builder: (s) {
-                        return NetworkPlayerList(spe3);
-                        /*return NetworkPlayerLifeCycle(
-                            controller: controller,
-                            childBuilder:(BuildContext context, TencentPlayerController controller) => Material(child: FullControl(controller,Axis.vertical),)
-                        );*/
-                      }
-                  );
-                },
-              ),
-              FlatButton(
-                child: Text("销毁"),
-                onPressed: (){
-                  if(controller != null){
-                    controller.dispose();
-                  }
-                },
-              ),
-              FlatButton(
-                child: Text("暂停"),
+                  onPressed: (){
+                    print("---------------------暂停:${controller.hashCode}");
+                    if(controller != null){
+                      controller.pause();
+                    }
+                  },
+                ),
+                FlatButton(
+                  child: Text("缓存信息"),
 
-                onPressed: (){
-                  print("---------------------暂停:${controller.hashCode}");
-                  if(controller != null){
-                    controller.pause();
-                  }
-                },
-              ),
+                  onPressed: (){
+                    print("---------------------缓存信息:${controller.hashCode}");
+                    if(netPlayerControl.controller != null){
+                      netPlayerControl.controller.getCacheState();
+                    }
+                  },
+                ),
 
-            ],
+              ],
+            ),
           ),
         ),
       ) ,
@@ -134,8 +165,37 @@ class _MyHomePageState extends State<MyHomePage> {
 /*    directory = await getExternalStorageDirectory();
     print("cachePath:${directory.path}");*/
     //netPlayerControl = NetPlayerControl(spe3,PlayerConfig(autoLoading: false,autoPlay: false,switchCache: true, haveCacheAutoPlay: true, coverImgUrl: coverImg,defaultMute: true),);
-    netPlayerControl = NetPlayerControl(spe3,PlayerConfigDelegate(coverImgUrl: coverImg,switchCache: false,haveCacheAutoPlay: false,haveWifiAutoPlay: false,txPlayerConfig: PlayerConfig(autoPlay: false,autoLoading: false)));
+    netPlayerControl = NetPlayerControl(spe3,PlayerConfigDelegate(coverImgUrl: null,switchCache: true,haveCacheAutoPlay: false,haveWifiAutoPlay: false,txPlayerConfig: PlayerConfig(autoPlay: false,autoLoading: false,defaultMute: true)));
+    netPlayerControl2 = NetPlayerControl(spe4,PlayerConfigDelegate(coverImgUrl: null,switchCache: true,haveCacheAutoPlay: true,haveWifiAutoPlay: false,txPlayerConfig: PlayerConfig(autoPlay: false,autoLoading: false)));
     //controller = TencentPlayerController.network(spe3,playerConfig: PlayerConfig(autoPlay: true,switchCache: true, coverImgUrl: coverImg,defaultMute: true),);
+    /*netPlayerControl.controller.initialize().then((_){
+      setState(() {
+      });
+    });*/
     print("---------------------initData:${controller.hashCode}");
   }
+}
+
+class KeepAlive extends StatefulWidget {
+  final Widget widget;
+  const KeepAlive({Key key,this.widget}) : super(key: key);
+  @override
+  _KeepAliveState createState() => _KeepAliveState();
+}
+class _KeepAliveState extends State<KeepAlive> with AutomaticKeepAliveClientMixin{
+  @override
+  bool get wantKeepAlive => true;
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.widget;
+  }
+}
+
+double setWidth(int value){
+  return ScreenUtil.getInstance().setWidth(value);
+}
+
+double getWidth(){
+  return ScreenUtil.screenWidthDp;
 }

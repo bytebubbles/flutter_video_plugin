@@ -28,12 +28,19 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL loop;
 @property(nonatomic)FLTFrameUpdater* frameUpdater;
 
+/**
+ * 是否已经加载视频资源
+ */
+@property (nonatomic, assign) BOOL isSetPlaySource;
+@property (nonatomic) NSDictionary* configMap;
++(NSArray *)getVideoCacheInfo:(NSDictionary*) configMap;
+
 - (instancetype)initWithCall:(FlutterMethodCall*)call
                 frameUpdater:(FLTFrameUpdater*)frameUpdater
                     registry:(NSObject<FlutterTextureRegistry>*)registry
                    messenger:(NSObject<FlutterBinaryMessenger>*)messenger;
 - (void)dispose;
--(void)resume;
+-(void)resume: (NSDictionary*) argsMap;
 -(void)pause;
 -(int64_t)position;
 -(int64_t)duration;

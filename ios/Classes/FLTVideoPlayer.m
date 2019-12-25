@@ -25,23 +25,23 @@
     _textureId = [registry registerTexture:self];
     // NSLog(@"FLTVideo  _textureId %lld",_textureId);
     
-    FlutterEventChannel* eventChannel = [FlutterEventChannel
-                                         eventChannelWithName:[NSString stringWithFormat:@"flutter_tencentplayer/videoEvents%lld",_textureId]
-                                         binaryMessenger:messenger];
-    
-   
-    
-    _eventChannel = eventChannel;
-    [_eventChannel setStreamHandler:self];
+//    FlutterEventChannel* eventChannel = [FlutterEventChannel
+//                                         eventChannelWithName:[NSString stringWithFormat:@"flutter_tencentplayer/videoEvents%lld",_textureId]
+//                                         binaryMessenger:messenger];
+//
+//
+//
+//    _eventChannel = eventChannel;
+//    [_eventChannel setStreamHandler:self];
     NSDictionary* argsMap = call.arguments;
+    _configMap = argsMap;
     TXVodPlayConfig* playConfig = [[TXVodPlayConfig alloc]init];
     playConfig.connectRetryCount=  3 ;
     playConfig.connectRetryInterval = 3;
     playConfig.timeout = 10 ;
     
     //     mVodPlayer.setLoop((boolean) call.argument("loop"));
-    
-    
+    //UIImage *coverImg = [self getImage:[self->_configMap[@"uri"] stringValue]];
     id headers = argsMap[@"headers"];
     if (headers!=nil&&headers!=NULL&&![@"" isEqualToString:headers]&&headers!=[NSNull null]) {
         NSDictionary* headers =  argsMap[@"headers"];
@@ -81,7 +81,46 @@
     [_txPlayer setVodDelegate:self];
     [_txPlayer setVideoProcessDelegate:self];
     [_txPlayer setStartTime:startPosition];
+//    id  pathArg = argsMap[@"uri"];
+//    if(pathArg!=nil&&pathArg!=NULL&&![@"" isEqualToString:pathArg]&&pathArg!=[NSNull null]){
+//        NSLog(@"播放器启动方式1  play");
+//        [_txPlayer startPlay:pathArg];
+//    }else{
+//        NSLog(@"播放器启动方式2  fileid");
+//        id auth = argsMap[@"auth"];
+//        if(auth!=nil&&auth!=NULL&&![@"" isEqualToString:auth]&&auth!=[NSNull null]){
+//            NSDictionary* authMap =  argsMap[@"auth"];
+//            int  appId= [authMap[@"appId"] intValue];
+//            NSString  *fileId= authMap[@"fileId"];
+//            TXPlayerAuthParams *p = [TXPlayerAuthParams new];
+//            p.appId = appId;
+//            p.fileId = fileId;
+//            [_txPlayer startPlayWithParams:p];
+//        }
+//    }
+//    NSLog(@"播放器初始化结束");
+    BOOL autoLoading = [argsMap[@"autoLoading"] boolValue];
+    if(autoPlayArg){
+         [self setPlaySource:argsMap];
+    }else {
+        if(autoLoading){
+             [self setPlaySource:argsMap];
+        }else {
+            _isSetPlaySource = NO;
+        }
+    }
+    FlutterEventChannel* eventChannel = [FlutterEventChannel
+                                         eventChannelWithName:[NSString stringWithFormat:@"flutter_tencentplayer/videoEvents%lld",_textureId]
+                                         binaryMessenger:messenger];
     
+    
+    
+    _eventChannel = eventChannel;
+    [_eventChannel setStreamHandler:self];
+    return  self;
+    
+}
+- (void)setPlaySource: (NSDictionary*) argsMap{
     id  pathArg = argsMap[@"uri"];
     if(pathArg!=nil&&pathArg!=NULL&&![@"" isEqualToString:pathArg]&&pathArg!=[NSNull null]){
         NSLog(@"播放器启动方式1  play");
@@ -99,13 +138,9 @@
             [_txPlayer startPlayWithParams:p];
         }
     }
-    NSLog(@"播放器初始化结束");
-    
- 
-    return  self;
-    
+    _isSetPlaySource = YES;
+    NSLog(@"初始化播放器资源");
 }
-
 
 #pragma FlutterTexture
 - (CVPixelBufferRef)copyPixelBuffer {
@@ -157,46 +192,40 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         
         if(EvtID==PLAY_EVT_VOD_PLAY_PREPARED){
-            if ([player isPlaying]) {
-                
-                int64_t duration = [player duration];
-                NSString *durationStr = [NSString stringWithFormat: @"%ld", (long)duration];
-                NSInteger  durationInt = [durationStr intValue];
-                if(self->_eventSink!=nil){
-                    self->_eventSink(@{
-                        @"event":@"initialized",
-                        @"duration":@(durationInt),
-                        @"width":@([player width]),
-                        @"height":@([player height])
-                    });
-                }
-                
+            int64_t duration = [player duration];
+            NSString *durationStr = [NSString stringWithFormat: @"%ld", (long)duration];
+            NSInteger  durationInt = [durationStr intValue];
+            if(self->_eventSink!=nil){
+                self->_eventSink(@{
+                                   @"event":@"prepared",
+                                   @"duration":@(durationInt),
+                                   @"width":@([player width]),
+                                   @"height":@([player height])
+                                   });
             }
             
         }else if(EvtID==PLAY_EVT_PLAY_PROGRESS){
-            if ([player isPlaying]) {
-                int64_t progress = [player currentPlaybackTime];
-                int64_t duration = [player duration];
-                int64_t playableDuration  = [player playableDuration];
-                
-                
-                NSString *progressStr = [NSString stringWithFormat: @"%ld", (long)progress];
-                NSString *durationStr = [NSString stringWithFormat: @"%ld", (long)duration];
-                NSString *playableDurationStr = [NSString stringWithFormat: @"%ld", (long)playableDuration];
-                NSInteger  progressInt = [progressStr intValue]*1000;
-                NSInteger  durationint = [durationStr intValue]*1000;
-                NSInteger  playableDurationInt = [playableDurationStr intValue]*1000;
-                //                NSLog(@"单精度浮点数： %d",progressInt);
-                //                NSLog(@"单精度浮点数： %d",durationint);
-                if(self->_eventSink!=nil){
-                    self->_eventSink(@{
-                        @"event":@"progress",
-                        @"progress":@(progressInt),
-                        @"duration":@(durationint),
-                        @"playable":@(playableDurationInt)
-                    });
-                }
-                
+
+            int64_t progress = [player currentPlaybackTime];
+            int64_t duration = [player duration];
+            int64_t playableDuration  = [player playableDuration];
+            
+            
+            NSString *progressStr = [NSString stringWithFormat: @"%ld", (long)progress];
+            NSString *durationStr = [NSString stringWithFormat: @"%ld", (long)duration];
+            NSString *playableDurationStr = [NSString stringWithFormat: @"%ld", (long)playableDuration];
+            NSInteger  progressInt = [progressStr intValue]*1000;
+            NSInteger  durationint = [durationStr intValue]*1000;
+            NSInteger  playableDurationInt = [playableDurationStr intValue]*1000;
+            //                NSLog(@"单精度浮点数： %d",progressInt);
+            //                NSLog(@"单精度浮点数： %d",durationint);
+            if(self->_eventSink!=nil){
+                self->_eventSink(@{
+                                   @"event":@"progress",
+                                   @"progress":@(progressInt),
+                                   @"duration":@(durationint),
+                                   @"playable":@(playableDurationInt)
+                                   });
             }
             
         }else if(EvtID==PLAY_EVT_PLAY_LOADING){
@@ -277,13 +306,44 @@
     NSLog(@"FLTVideo停止通信");
     return nil;
 }
-
+//typedef void (^initVideoPlayer)(NSData *data);
 - (FlutterError* _Nullable)onListenWithArguments:(id _Nullable)arguments
                                        eventSink:(nonnull FlutterEventSink)events {
     _eventSink = events;
-    
-    NSLog(@"FLTVideo开启通信");
+
     //[self sendInitialized];
+    dispatch_queue_t queue = dispatch_queue_create("initVideoPlayer", NULL);
+    dispatch_async(queue, ^(){
+        UIImage *coverImg;
+        if(self->_configMap){
+            coverImg = [self getImage:(NSString *)self->_configMap[@"uri"]];
+            NSArray *videoCacheInfoAry = [FLTVideoPlayer getVideoCacheInfo:self->_configMap];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSMutableDictionary *dataMap = [[NSMutableDictionary alloc] init];
+                [dataMap setObject:@"initialized" forKey:@"event"];
+                if(coverImg){
+                    NSData *imgData = UIImagePNGRepresentation(coverImg);
+                    [dataMap setObject:[FlutterStandardTypedData typedDataWithBytes:imgData] forKey:@"snapshot"];
+                }
+                if(videoCacheInfoAry){
+                    [dataMap setObject:videoCacheInfoAry forKey:@"cacheState"];
+                }
+                if(self->_eventSink!=nil){
+                    self->_eventSink(dataMap);
+                }
+            });
+            
+        }else {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(self->_eventSink!=nil){
+                    self->_eventSink(@{@"event":@"initialized",});
+                }
+            });
+        }
+        
+        
+    });
+    
     return nil;
 }
 
@@ -319,8 +379,15 @@
     _loop = loop;
 }
 
-- (void)resume{
-    [_txPlayer resume];
+- (void)resume:(NSDictionary*) argsMap{
+    if(_isSetPlaySource){
+        if(![_txPlayer isPlaying]){
+            [_txPlayer resume];
+        }
+        return ;
+    }
+    [_txPlayer setIsAutoPlay:YES];
+    [self setPlaySource:argsMap];
 }
 -(void)pause{
     [_txPlayer pause];
@@ -389,4 +456,82 @@
     
 }
 
+// 获取视频第一帧
+- (UIImage*) getVideoPreViewImage:(NSURL *)path
+{
+    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:path options:nil];
+    AVAssetImageGenerator *assetGen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+
+    assetGen.appliesPreferredTrackTransform = YES;
+    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
+    NSError *error = nil;
+    CMTime actualTime;
+    CGImageRef image = [assetGen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+    UIImage *videoImage = [[UIImage alloc] initWithCGImage:image];
+    CGImageRelease(image);
+    return videoImage;
+
+}
+
+-(UIImage *)getImage:(NSString *)videoURL{
+    UIImage *thumb;
+    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:[NSURL fileURLWithPath:videoURL] options:nil];
+    
+    AVAssetImageGenerator *gen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+    
+    gen.appliesPreferredTrackTransform = YES;
+    
+    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
+    
+    NSError *error = nil;
+    
+    CMTime actualTime;
+    
+    CGImageRef image = [gen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+    
+    thumb = [[UIImage alloc] initWithCGImage:image];
+    
+    CGImageRelease(image);
+    return thumb;
+    //return nil;
+}
+
++(NSArray *)getVideoCacheInfo:(NSDictionary*) configMap{
+    NSString *cachePath = (NSString *)configMap[@"cachePath"];
+    NSArray *videoCacheInfoAry;
+    if (cachePath!=nil&&cachePath!=NULL&&![@"" isEqualToString:cachePath] && cachePath!=[NSNull null]){
+        NSString *realCachePath = [NSString stringWithFormat:@"%@/txvodcache/tx_cache.plist",cachePath];
+        NSMutableArray *nsMutableArray = [[NSMutableArray alloc] initWithContentsOfFile:realCachePath];
+        //            NSLog(@"realCachePath:%@",realCachePath);
+        //            NSLog(@"nsMutableArray:%@",nsMutableArray);
+        
+        NSEnumerator *enmuerator = [nsMutableArray objectEnumerator];
+        NSDictionary *item;
+        while(item = [enmuerator nextObject]){
+            //NSLog(@"数组中的对象：%@",item);
+            if([(NSString *)configMap[@"uri"] isEqualToString:item[@"url"]]){
+                //NSLog(@"就是该对象：%@",item);
+                NSString *videoCacheInfoPath = [NSString stringWithFormat:@"%@/txvodcache/%@.info",cachePath,item[@"path"]];
+                NSStringEncoding enc;
+                NSString *videoCacheInfoStr = [NSString stringWithContentsOfFile:videoCacheInfoPath usedEncoding:(NSStringEncoding *)&enc error:nil];
+                videoCacheInfoAry = [videoCacheInfoStr componentsSeparatedByString:@"\n"];
+                //                    NSLog(@"videoCacheInfoPath:%@",videoCacheInfoPath);
+                //                    NSLog(@"videoCacheInfoStr:%@",videoCacheInfoStr);
+                //                    NSLog(@"videoCacheInfoAry:%@",videoCacheInfoAry);
+                
+                //                    if(videoCacheInfoAry && videoCacheInfoAry.count > 3){
+                //                        int64_t cacheTotal = [videoCacheInfoAry[1] intValue];
+                //                        int64_t cacheCurr = [videoCacheInfoAry[2] intValue];
+                //                        if(cacheTotal > cacheCurr){
+                //                            NSLog(@"未缓存完成");
+                //                        }else {
+                //                            NSLog(@"已缓存");
+                //                        }
+                //                    }
+                break;
+            }
+        }
+    }
+    return videoCacheInfoAry;
+}
 @end

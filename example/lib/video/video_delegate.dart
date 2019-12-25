@@ -42,6 +42,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
   VoidCallback _linster;
   int count = 0;
   double ic_play_width = setWidth(140);
+  dynamic coverFrame;
   @override
   void initState() {
     //controller = createVideoPlayerController();
@@ -143,6 +144,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     controller?.initialize()?.then((_) async {
       _isNeedAutoPlay();
       isInitializing = false;
+      coverFrame = controller.coverFrame;
       setState(() {});
     });
     controller.newStartPlayCallback = (){
@@ -199,6 +201,11 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
         }else {
           coverImg = Container(
             color: Colors.black,
+            width: double.infinity,
+            height: double.infinity,
+            child: coverFrame != null ? Image.memory(coverFrame,
+            fit: BoxFit.contain,
+            ) : null,
           );
         }
         controlWidget = AspectRatio(

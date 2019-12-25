@@ -18,10 +18,12 @@
 @end
 
 
+
 @implementation FlutterTencentplayerPlugin
 
 NSObject<FlutterPluginRegistrar>* mRegistrar;
-FLTVideoPlayer* player ;
+//FLTVideoPlayer* player ;
+NSMutableDictionary *playerMap;
 
 - (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
     self = [super init];
@@ -50,14 +52,15 @@ FLTVideoPlayer* player ;
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
      //NSLog(@"FLTVideo  call name   %@",call.method);
     if ([@"init" isEqualToString:call.method]) {
+        NSLog(@"handleMethodCall_init");
         [self disposeAllPlayers];
         result(nil);
     }else if([@"create" isEqualToString:call.method]){
         NSLog(@"FLTVideo  create");
-        [self disposeAllPlayers];
+        //[self disposeAllPlayers];
         FLTFrameUpdater* frameUpdater = [[FLTFrameUpdater alloc] initWithRegistry:_registry];
 //        FLTVideoPlayer*
-        player= [[FLTVideoPlayer alloc] initWithCall:call frameUpdater:frameUpdater registry:_registry messenger:_messenger];
+        FLTVideoPlayer* player= [[FLTVideoPlayer alloc] initWithCall:call frameUpdater:frameUpdater registry:_registry messenger:_messenger];
         if (player) {
             [self onPlayerSetup:player frameUpdater:frameUpdater result:result];
         }
@@ -111,19 +114,21 @@ FLTVideoPlayer* player ;
     }
     int64_t textureId = ((NSNumber*)argsMap[@"textureId"]).unsignedIntegerValue;
 //    FLTVideoPlayer* player = _players[@(textureId)];
-
+    FLTVideoPlayer* player = [playerMap objectForKey:@(textureId)];
+    //NSLog(@"count:%d",playerMap.count);
+    //NSLog(@"object:%@",player);
     if([@"play" isEqualToString:call.method]){
-        [player resume];
+        [player resume:argsMap];
         result(nil);
     }else if([@"pause" isEqualToString:call.method]){
         [player pause];
         result(nil);
     }else if([@"seekTo" isEqualToString:call.method]){
-        NSLog(@"跳转到指定位置----------");
+        //NSLog(@"跳转到指定位置----------");
         [player seekTo:[[argsMap objectForKey:@"location"] intValue]];
         result(nil);
     }else if([@"setRate" isEqualToString:call.method]){ //播放速率
-        NSLog(@"修改播放速率----------");
+        //NSLog(@"修改播放速率----------");
         float rate = [[argsMap objectForKey:@"rate"] floatValue];
         if (rate<0||rate>2) {
             result(nil);
@@ -133,22 +138,31 @@ FLTVideoPlayer* player ;
         result(nil);
         
     }else if([@"setBitrateIndex" isEqualToString:call.method]){
-        NSLog(@"修改播放清晰度----------");
+        //NSLog(@"修改播放清晰度----------");
         int  index = [[argsMap objectForKey:@"index"] intValue];
         [player setBitrateIndex:index];
         result(nil);
     }else if([@"dispose" isEqualToString:call.method]){
-         NSLog(@"FLTVideo  dispose   ----   ");
+         //NSLog(@"FLTVideo  dispose   ----   ");
         [_registry unregisterTexture:textureId];
        // [_players removeObjectForKey:@(textureId)];
         //_players= nil;
-        [self disposeAllPlayers];
+        [self disposePlayer:textureId];
+        //[self disposeAllPlayers];
         result(nil);
     }else if([@"mute" isEqualToString:call.method]){
         NSLog(@"FLTVideo mute -- ");
         Boolean isMute = [[argsMap objectForKey:@"isMute"] boolValue];
         [player setMute:isMute];
         result(nil);
+    }else if([@"getCacheState" isEqualToString:call.method]){
+        dispatch_queue_t queue = dispatch_queue_create("getCacheState", NULL);
+        dispatch_async(queue, ^(){
+            NSArray *videoCacheInfoAry = [FLTVideoPlayer getVideoCacheInfo:player.configMap];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                result(videoCacheInfoAry);
+            });
+        });
     }
     else{
         result(FlutterMethodNotImplemented);
@@ -160,17 +174,35 @@ FLTVideoPlayer* player ;
          frameUpdater:(FLTFrameUpdater*)frameUpdater
                result:(FlutterResult)result {
 //    _players[@(player.textureId)] = player;
+    if(!playerMap) playerMap =  [NSMutableDictionary dictionary];
+    [playerMap setObject: player forKey:@(player.textureId)];
     result(@{@"textureId" : @(player.textureId)});
     
 }
 
+-(void) disposePlayer: (int64_t)textureId{
+    //NSLog(@"FLTVideo 销毁单个播放器----------textureId:%lld",textureId);
+    if(playerMap){
+        FLTVideoPlayer* player = [playerMap objectForKey:@(textureId)];
+        if(player){
+            [player dispose];
+            player = nil;
+            [playerMap removeObjectForKey:@(textureId)];
+        }
+    }
+}
+
 -(void) disposeAllPlayers{
-     NSLog(@"FLTVideo 初始化播放器状态----------");
+    // NSLog(@"FLTVideo 销毁所有播放器----------");
     // Allow audio playback when the Ring/Silent switch is set to silent
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
-    if(player){
-        [player dispose];
-        player = nil;
+    if(playerMap){
+        for(id key in playerMap){
+            NSLog(@"key :%@  value :%@", key, [playerMap objectForKey:key]);
+            [self disposePlayer:(int64_t)key];
+        }
     }
+    
+    
 }
 @end

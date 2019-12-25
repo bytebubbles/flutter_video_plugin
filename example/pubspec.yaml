@@ -2,6 +2,8 @@ name: flutter_tencentplayer_example
 description: Demonstrates how to use the flutter_tencentplayer plugin.
 publish_to: 'none'
 
+
+version: 1.0.0+1
 environment:
   sdk: ">=2.1.0 <3.0.0"
 
@@ -17,7 +19,6 @@ dependencies:
   cached_network_image: 1.1.1
   connectivity: 0.4.2
   fluttertoast: ^3.0.3
-  video_player: 0.10.2+5
 dev_dependencies:
   flutter_test:
     sdk: flutter
