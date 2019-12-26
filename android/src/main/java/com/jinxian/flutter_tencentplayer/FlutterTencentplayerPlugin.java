@@ -206,8 +206,20 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
 
                     Message msg2 = new Message();
                     Bundle bundle2 = new Bundle();
-                    Bitmap bitmap = getNetVideoBitmap(call.argument("uri").toString());
+                    Bitmap bitmap = getNetVideoBitmap(call.argument("uri").toString(),videoCacheInfoAry);
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    if(bitmap == null){
+                        bundle2.putByteArray("byteArray",null);
+                        msg2.setData(bundle2);
+                        msg2.what = 1;
+                        handler.sendMessage(msg2);
+                        try {
+                            stream.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        return ;
+                    }
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                     byte[] byteArray = stream.toByteArray();
                     bitmap.recycle();
@@ -216,6 +228,11 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                     msg2.setData(bundle2);
                     msg2.what = 1;
                     handler.sendMessage(msg2);
+                    try {
+                        stream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }.start();
             /*ArrayList<String> videoCacheInfoAry = getVideoCacheInfo(call);
@@ -683,13 +700,26 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
         disposeAllPlayers();
     }
 
-    public static Bitmap getNetVideoBitmap(String videoUrl) {
+    public static Bitmap getNetVideoBitmap(String videoUrl,ArrayList<String> videoCacheInfoAry) {
         Bitmap bitmap = null;
-
+        String url = null;
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
-            //根据url获取缩略图
-            retriever.setDataSource(videoUrl, new HashMap());
+            if(videoCacheInfoAry != null && videoCacheInfoAry.size() >= 6){
+                if(Integer.parseInt(videoCacheInfoAry.get(4)) == 1){
+                    url = videoCacheInfoAry.get(5);
+                    //Log.d("哇啦",videoUrl);
+
+                }
+            }
+            if(url == null){
+                //根据本地缓存获取缩略图
+                retriever.setDataSource(videoUrl, new HashMap());
+            }else {
+                //根据url获取缩略图
+                retriever.setDataSource(url);
+            }
+
             //获得第一帧图片
             bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
         } catch (IllegalArgumentException e) {
@@ -746,19 +776,33 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                 if(videoCacheItems != null && videoCacheItems.size() > 0){
                     for(TXCacheXMLItemBean itemBean : videoCacheItems){
                         if(itemBean.getUrl().equals(call.argument("uri"))){
-                            String videoInfoPath = call.argument("cachePath").toString() + "/txvodcache/"+itemBean.getPath()+".info";
+                            String videoPath = call.argument("cachePath").toString() + "/txvodcache/"+itemBean.getPath();
+                            String videoInfoPath = videoPath+".info";
                             File videoInfoFile = new File(videoInfoPath);
                             reader = new BufferedReader(new FileReader(videoInfoFile));
                             String tempStr = null;
                             while ((tempStr = reader.readLine()) != null){
                                 videoCacheInfoAry.add(tempStr);
                             }
+                            int identity = -1;
+                            if(videoCacheInfoAry.size() >= 3){
+                                double total = videoCacheInfoAry.indexOf(1);
+                                double curr = videoCacheInfoAry.indexOf(2);
+
+                                if(total > curr){
+                                    identity = 0;
+                                }else {
+                                    identity = 1;
+                                }
+                            }
+                            videoCacheInfoAry.add(identity+"");
+                            videoCacheInfoAry.add(videoPath);
                             break;
                         }
                     }
                 }
             }else {
-                Log.e("TXVideoPlayer","没找到");
+                Log.e("TXVideoPlayer",txCachePath+"is not exists");
             }
 
         }catch (Exception e){

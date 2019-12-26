@@ -324,7 +324,18 @@
             self->_eventSink(dataMap);
             dispatch_async(queue, ^(){
                 UIImage *coverImg;
-                coverImg = [self getImage:(NSString *)self->_configMap[@"uri"]];
+                NSString *videoPath;
+                if(videoCacheInfoAry && videoCacheInfoAry.count >= 6){
+                    if([[videoCacheInfoAry objectAtIndex:4] isEqualToString:@"1"]){
+                        videoPath = [videoCacheInfoAry objectAtIndex:5];
+                    }
+                }
+                if(!videoPath){
+                    videoPath =(NSString *)self->_configMap[@"uri"];
+                }
+                //NSLog(@"videoPath:%@",videoPath);
+                //NSLog(@"videoCacheInfoAry:%@",videoCacheInfoAry);
+                coverImg = [self getImage:videoPath];
                 //NSArray *videoCacheInfoAry = [FLTVideoPlayer getVideoCacheInfo:self->_configMap];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     NSMutableDictionary *dataMap = [[NSMutableDictionary alloc] init];
@@ -480,9 +491,24 @@
     //return nil;
 }
 
+- (UIImage*) getVideoPreViewImage:(NSURL *)path
+{
+    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:path options:nil];
+    AVAssetImageGenerator *assetGen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+    
+    assetGen.appliesPreferredTrackTransform = YES;
+    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
+    NSError *error = nil;
+    CMTime actualTime;
+    CGImageRef image = [assetGen copyCGImageAtTime:time actualTime:&actualTime error:&error];
+    UIImage *videoImage = [[UIImage alloc] initWithCGImage:image];
+    CGImageRelease(image);
+    return videoImage;
+}
+
 +(NSArray *)getVideoCacheInfo:(NSDictionary*) configMap{
     NSString *cachePath = (NSString *)configMap[@"cachePath"];
-    NSArray *videoCacheInfoAry;
+    NSMutableArray *videoCacheInfoAry;
     if (cachePath!=nil&&cachePath!=NULL&&![@"" isEqualToString:cachePath] && cachePath!=[NSNull null]){
         NSString *realCachePath = [NSString stringWithFormat:@"%@/txvodcache/tx_cache.plist",cachePath];
         NSMutableArray *nsMutableArray = [[NSMutableArray alloc] initWithContentsOfFile:realCachePath];
@@ -495,6 +521,7 @@
             //NSLog(@"数组中的对象：%@",item);
             if([(NSString *)configMap[@"uri"] isEqualToString:item[@"url"]]){
                 //NSLog(@"就是该对象：%@",item);
+                NSString *videoCachePath = [NSString stringWithFormat:@"%@/txvodcache/%@",cachePath,item[@"path"]];
                 NSString *videoCacheInfoPath = [NSString stringWithFormat:@"%@/txvodcache/%@.info",cachePath,item[@"path"]];
                 NSStringEncoding enc;
                 NSString *videoCacheInfoStr = [NSString stringWithContentsOfFile:videoCacheInfoPath usedEncoding:(NSStringEncoding *)&enc error:nil];
@@ -502,16 +529,21 @@
                 //                    NSLog(@"videoCacheInfoPath:%@",videoCacheInfoPath);
                 //                    NSLog(@"videoCacheInfoStr:%@",videoCacheInfoStr);
                 //                    NSLog(@"videoCacheInfoAry:%@",videoCacheInfoAry);
-                
-                //                    if(videoCacheInfoAry && videoCacheInfoAry.count > 3){
-                //                        int64_t cacheTotal = [videoCacheInfoAry[1] intValue];
-                //                        int64_t cacheCurr = [videoCacheInfoAry[2] intValue];
-                //                        if(cacheTotal > cacheCurr){
-                //                            NSLog(@"未缓存完成");
-                //                        }else {
-                //                            NSLog(@"已缓存");
-                //                        }
-                //                    }
+                [videoCacheInfoAry removeObject:@""];
+                if(videoCacheInfoAry && videoCacheInfoAry.count > 3){
+                    int64_t cacheTotal = [videoCacheInfoAry[1] intValue];
+                    int64_t cacheCurr = [videoCacheInfoAry[2] intValue];
+                    NSString *identity = @"-1";
+                    if(cacheTotal > cacheCurr){
+                        NSLog(@"未缓存完成");
+                        identity = @"0";
+                    }else {
+                        NSLog(@"已缓存");
+                        identity = @"1";
+                    }
+                    [videoCacheInfoAry addObject:identity];
+                    [videoCacheInfoAry addObject:videoCachePath];
+                }
                 break;
             }
         }
