@@ -17,7 +17,6 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
   Map<dynamic, dynamic> dataSourceDescription;
   NewStartPlayCallback newStartPlayCallback;
   bool isNewStartPlay;
-  dynamic coverFrame;
   // ignore: unnecessary_getters_setters
   set playerConfig(PlayerConfig playerConfig) {
     assert ((){
@@ -100,7 +99,6 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
         case 'initialized':
           print("-----initialized");
           value = value.copyWith(initialized: true, hasCache: _judgeCacheState(map['cacheState']));
-          coverFrame = map['snapshot'];
           //print("------initialized_snapshot:${map['snapshot']}");
           if(!initializingCompleter.isCompleted) initializingCompleter.complete(null);
           break;
@@ -157,6 +155,10 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
         case 'snapshot':
           print("------snapshot:${map['snapshot']}");
           //coverFrame = map['snapshot'];
+          break;
+        case 'firstFrame':
+          print("------snapshot:${map.length}");
+          value = value.copyWith(firstFrame: map['snapshot']);
           break;
       }
     }

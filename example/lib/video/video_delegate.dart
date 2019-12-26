@@ -53,6 +53,10 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
 
         isReplay = true;
       }
+      if(coverFrame == null && controller.value.firstFrame != null){
+        coverFrame = controller.value.firstFrame;
+      }
+
       setState(() {});
     };
     _initVideo();
@@ -144,7 +148,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     controller?.initialize()?.then((_) async {
       _isNeedAutoPlay();
       isInitializing = false;
-      coverFrame = controller.coverFrame;
+      //coverFrame = controller.coverFrame;
       setState(() {});
     });
     controller.newStartPlayCallback = (){

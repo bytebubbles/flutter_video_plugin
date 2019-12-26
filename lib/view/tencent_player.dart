@@ -27,7 +27,7 @@ class _TencentPlayerState extends State<TencentPlayer> {
     _listener = () {
       final int newTextureId = widget.controller.textureId;
       if (newTextureId != _textureId) {
-        print("TencentPlayer_linstener_textureID:${newTextureId}");
+        //print("TencentPlayer_linstener_textureID:${newTextureId}");
         setState(() {
           _textureId = newTextureId;
         });
@@ -35,7 +35,7 @@ class _TencentPlayerState extends State<TencentPlayer> {
     };
     _textureId = widget.controller.textureId;
     widget.controller.addListener(_listener);
-    print("TencentPlayer_textureID:${_textureId}");
+    //print("TencentPlayer_textureID:${_textureId}");
   }
 
   @override
@@ -49,7 +49,7 @@ class _TencentPlayerState extends State<TencentPlayer> {
       }
       oldWidget.controller.removeListener(_listener);
     }*/
-    print("TencentPlayer_didUpdateWidget_textureID:${_textureId}");
+    //print("TencentPlayer_didUpdateWidget_textureID:${_textureId}");
     _textureId = widget.controller.textureId;
     widget.controller.addListener(_listener);
   }

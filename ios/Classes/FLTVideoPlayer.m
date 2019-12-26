@@ -313,36 +313,36 @@
 
     //[self sendInitialized];
     dispatch_queue_t queue = dispatch_queue_create("initVideoPlayer", NULL);
-    dispatch_async(queue, ^(){
-        UIImage *coverImg;
-        if(self->_configMap){
-            coverImg = [self getImage:(NSString *)self->_configMap[@"uri"]];
+    if(self->_eventSink!=nil){
+        if(self->_configMap!=nil){
+            NSMutableDictionary *dataMap = [[NSMutableDictionary alloc] init];
             NSArray *videoCacheInfoAry = [FLTVideoPlayer getVideoCacheInfo:self->_configMap];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSMutableDictionary *dataMap = [[NSMutableDictionary alloc] init];
-                [dataMap setObject:@"initialized" forKey:@"event"];
-                if(coverImg){
-                    NSData *imgData = UIImagePNGRepresentation(coverImg);
-                    [dataMap setObject:[FlutterStandardTypedData typedDataWithBytes:imgData] forKey:@"snapshot"];
-                }
-                if(videoCacheInfoAry){
-                    [dataMap setObject:videoCacheInfoAry forKey:@"cacheState"];
-                }
-                if(self->_eventSink!=nil){
+            [dataMap setObject:@"initialized" forKey:@"event"];
+            if(videoCacheInfoAry){
+                [dataMap setObject:videoCacheInfoAry forKey:@"cacheState"];
+            }
+            self->_eventSink(dataMap);
+            dispatch_async(queue, ^(){
+                UIImage *coverImg;
+                coverImg = [self getImage:(NSString *)self->_configMap[@"uri"]];
+                //NSArray *videoCacheInfoAry = [FLTVideoPlayer getVideoCacheInfo:self->_configMap];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSMutableDictionary *dataMap = [[NSMutableDictionary alloc] init];
+                    [dataMap setObject:@"firstFrame" forKey:@"event"];
+                    if(coverImg){
+                        NSData *imgData = UIImagePNGRepresentation(coverImg);
+                        [dataMap setObject:[FlutterStandardTypedData typedDataWithBytes:imgData] forKey:@"snapshot"];
+                    }
+                    
                     self->_eventSink(dataMap);
-                }
+                });
             });
-            
         }else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if(self->_eventSink!=nil){
-                    self->_eventSink(@{@"event":@"initialized",});
-                }
-            });
+            self->_eventSink(@{@"event":@"initialized",});
         }
-        
-        
-    });
+    }
+    
+    
     
     return nil;
 }
@@ -457,22 +457,6 @@
 }
 
 // 获取视频第一帧
-- (UIImage*) getVideoPreViewImage:(NSURL *)path
-{
-    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:path options:nil];
-    AVAssetImageGenerator *assetGen = [[AVAssetImageGenerator alloc] initWithAsset:asset];
-
-    assetGen.appliesPreferredTrackTransform = YES;
-    CMTime time = CMTimeMakeWithSeconds(0.0, 600);
-    NSError *error = nil;
-    CMTime actualTime;
-    CGImageRef image = [assetGen copyCGImageAtTime:time actualTime:&actualTime error:&error];
-    UIImage *videoImage = [[UIImage alloc] initWithCGImage:image];
-    CGImageRelease(image);
-    return videoImage;
-
-}
-
 -(UIImage *)getImage:(NSString *)videoURL{
     UIImage *thumb;
     AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:[NSURL fileURLWithPath:videoURL] options:nil];

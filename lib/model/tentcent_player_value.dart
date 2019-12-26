@@ -20,7 +20,7 @@ class TencentPlayerValue {
   final bool initialized;
   final bool prepared;
   final bool hasCache;
-
+  dynamic firstFrame;
   //bool get initialized => duration.inMilliseconds != 0;
 
   bool get hasError => errorDescription != null;
@@ -47,6 +47,7 @@ class TencentPlayerValue {
     this.initialized = false,
     this.prepared = false,
     this.hasCache = false,
+    this.firstFrame,
   });
 
   TencentPlayerValue copyWith({
@@ -68,6 +69,7 @@ class TencentPlayerValue {
     bool initialized,
     bool prepared,
     bool hasCache,
+    dynamic firstFrame,
   }) {
     return TencentPlayerValue(
       duration: duration ?? this.duration,
@@ -89,6 +91,7 @@ class TencentPlayerValue {
       initialized: initialized ?? this.initialized,
       prepared: prepared ?? this.prepared,
       hasCache: hasCache ?? this.hasCache,
+      firstFrame: firstFrame ?? this.firstFrame,
     );
   }
 

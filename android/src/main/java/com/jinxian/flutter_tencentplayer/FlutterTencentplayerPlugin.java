@@ -172,34 +172,55 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
             final Handler handler = new Handler(){
                 @Override
                 public void handleMessage(Message msg) {
+                    final Map<String, Object> preparedMap;
 
+                    switch (msg.what){
+                        case 0:
+                            preparedMap  = new HashMap<>();
+                            preparedMap.put("event", "initialized");
+                            ArrayList<String> videoCacheInfoAry = msg.getData().getStringArrayList("videoCacheInfoAry");
+                            preparedMap.put("cacheState", videoCacheInfoAry);
+                            eventSink.success(preparedMap);
+                            break;
+                        case 1:
+                            preparedMap  = new HashMap<>();
+                            preparedMap.put("event", "firstFrame");
+                            preparedMap.put("snapshot", msg.getData().getByteArray("byteArray"));
+                            eventSink.success(preparedMap);
+                            break;
+                    }
                     //final Map<String, Object> preparedMap = new HashMap<>();
-                    preparedMap.put("snapshot", msg.getData().getByteArray("byteArray"));
-                    ArrayList<String> videoCacheInfoAry = msg.getData().getStringArrayList("videoCacheInfoAry");
-                    preparedMap.put("cacheState", videoCacheInfoAry);
-                    eventSink.success(preparedMap);
                 }
             };
 
             new Thread(){
                 @Override
                 public void run() {
+
                     Message msg = new Message();
+                    Bundle bundle = new Bundle();
+                    ArrayList<String> videoCacheInfoAry = getVideoCacheInfo(call);
+                    bundle.putStringArrayList("videoCacheInfoAry",videoCacheInfoAry);
+                    msg.what = 0;
+                    handler.sendMessage(msg);
+
+                    Message msg2 = new Message();
+                    Bundle bundle2 = new Bundle();
                     Bitmap bitmap = getNetVideoBitmap(call.argument("uri").toString());
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
                     byte[] byteArray = stream.toByteArray();
                     bitmap.recycle();
-                    Bundle bundle = new Bundle();
-                    bundle.putByteArray("byteArray",byteArray);
-                    msg.setData(bundle);
 
-                    ArrayList<String> videoCacheInfoAry = getVideoCacheInfo(call);
-                    bundle.putStringArrayList("videoCacheInfoAry",videoCacheInfoAry);
-                    handler.sendMessage(msg);
+                    bundle2.putByteArray("byteArray",byteArray);
+                    msg2.setData(bundle2);
+                    msg2.what = 1;
+                    handler.sendMessage(msg2);
                 }
             }.start();
-
+            /*ArrayList<String> videoCacheInfoAry = getVideoCacheInfo(call);
+            preparedMap.put("cacheState", videoCacheInfoAry);
+            eventSink.success(preparedMap);*/
         }
 
         private void setPlaySource(MethodCall call) {
