@@ -200,8 +200,10 @@ public class FlutterTencentplayerPlugin implements MethodCallHandler {
                     Message msg = new Message();
                     Bundle bundle = new Bundle();
                     ArrayList<String> videoCacheInfoAry = getVideoCacheInfo(call);
+
                     bundle.putStringArrayList("videoCacheInfoAry",videoCacheInfoAry);
                     msg.what = 0;
+                    msg.setData(bundle);
                     handler.sendMessage(msg);
 
                     Message msg2 = new Message();

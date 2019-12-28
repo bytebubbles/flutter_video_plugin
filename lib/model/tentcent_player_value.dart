@@ -19,11 +19,13 @@ class TencentPlayerValue {
   final bool isFullScreen;
   final bool initialized;
   final bool prepared;
-  final bool hasCache;
   dynamic firstFrame;
+  final int videoFileSize;     //视频文件大小 字节
+  final int cacheDiskSize; //缓存到硬盘的大小（针对开启硬盘缓存）
   //bool get initialized => duration.inMilliseconds != 0;
 
   bool get hasError => errorDescription != null;
+  bool get hasCache => videoFileSize > 0 ? videoFileSize == cacheDiskSize : false;  //是否已缓存完成（针对开启硬盘缓存）
 
   double get aspectRatio => size != null ? size.width / size.height > 0.0 ? size.width / size.height : 1.0 : 1.0;
 
@@ -46,8 +48,9 @@ class TencentPlayerValue {
     this.isFullScreen = false,
     this.initialized = false,
     this.prepared = false,
-    this.hasCache = false,
     this.firstFrame,
+    this.cacheDiskSize = 0,
+    this.videoFileSize = 0
   });
 
   TencentPlayerValue copyWith({
@@ -68,8 +71,9 @@ class TencentPlayerValue {
     bool isFullScreen,
     bool initialized,
     bool prepared,
-    bool hasCache,
     dynamic firstFrame,
+    int cacheDiskSize,
+    int videoFileSize
   }) {
     return TencentPlayerValue(
       duration: duration ?? this.duration,
@@ -90,8 +94,9 @@ class TencentPlayerValue {
       isFullScreen: isFullScreen ?? this.isFullScreen,
       initialized: initialized ?? this.initialized,
       prepared: prepared ?? this.prepared,
-      hasCache: hasCache ?? this.hasCache,
       firstFrame: firstFrame ?? this.firstFrame,
+      cacheDiskSize: cacheDiskSize ?? this.cacheDiskSize,
+      videoFileSize: videoFileSize ?? this.videoFileSize,
     );
   }
 
@@ -110,6 +115,8 @@ class TencentPlayerValue {
         'size: $size),'
         'initialized: $initialized),'
         'prepared: $prepared),'
+        'videoFileSize: $videoFileSize),'
+        'cacheDiskSize: $cacheDiskSize),'
     ;
   }
 }

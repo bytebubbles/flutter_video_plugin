@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tencentplayer/flutter_tencentplayer.dart';
 import 'package:flutter_tencentplayer/model/TxCache.dart';
-import 'package:xml2json/xml2json.dart';
+//import 'package:xml2json/xml2json.dart';
 import 'dart:convert';
 
 typedef void NewStartPlayCallback();
@@ -90,16 +90,16 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
     _creatingCompleter.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
 
-    void eventListener(dynamic event) {
+    Future eventListener(dynamic event) async {
       if (_isDisposed) {
         return;
       }
       final Map<dynamic, dynamic> map = event;
-      switch (map['event']) {
+      switch (map['event'])  {
         case 'initialized':
-          print("-----initialized");
-          value = value.copyWith(initialized: true, hasCache: _judgeCacheState(map['cacheState']));
-          //print("------initialized_snapshot:${map['snapshot']}");
+          await _initialized(map);
+
+          print("-----initialized:${value}");
           if(!initializingCompleter.isCompleted) initializingCompleter.complete(null);
           break;
         case 'prepared':
@@ -292,13 +292,19 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       'textureId': _textureId,
     });
     print("videoCacheInfoAry:${videoCacheInfoAry}");
-    bool hasCache = _judgeCacheState(videoCacheInfoAry) ?? false;
-    value = value.copyWith(hasCache: hasCache);
+    int totalCache = 0;
+    int currCache = 0;
+    if(videoCacheInfoAry != null && videoCacheInfoAry is List && videoCacheInfoAry.length >= 3){
+      totalCache = int.parse(videoCacheInfoAry[1]);
+      currCache = int.parse(videoCacheInfoAry[2]);
+    }
+    value = value.copyWith(videoFileSize: totalCache, cacheDiskSize: currCache);
     if(newStartPlayCallback != null) newStartPlayCallback();
     isNewStartPlay = false;
   }
 
   bool _judgeCacheState(var videoCacheInfoAry) {
+      print("_judgeCacheState:${videoCacheInfoAry}");
       if(videoCacheInfoAry != null && videoCacheInfoAry is List && videoCacheInfoAry.length >= 3){
         int totalCache = int.parse(videoCacheInfoAry[1]);
         int currCache = int.parse(videoCacheInfoAry[2]);
@@ -314,79 +320,43 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       return false;
   }
 
-  /*Future<bool> isHasCacheFinish(){
-    return isHasCacheFinishForCachePath(dataSource, playerConfig.cachePath);
-  }*/
-
-}
-
-Future<bool> isHasCacheFinishForCachePath( String url ,String cachePath) async {
-
-  print("---playerConfig.cachePath:${cachePath}");
-  if(cachePath != null){
-    Xml2Json myTransformer = Xml2Json();
-    File file = File("${cachePath}/txvodcache/tx_cache.xml");
-    print("----file:${file}");
-    print("----file:${file.existsSync()}");
-    String contents;
-    if(file.existsSync()){
-      try{
-        contents = await file.readAsString();
-      }catch(e){
-        print("---error:${e}");
-      }
+  _initialized(Map<dynamic, dynamic> map) async {
+    var videoCacheInfoAry = map['cacheState'];
+    int totalCache = 0;
+    int currCache = 0;
+    if(videoCacheInfoAry != null && videoCacheInfoAry is List && videoCacheInfoAry.length >= 3){
+      totalCache = int.parse(videoCacheInfoAry[1]);
+      currCache = int.parse(videoCacheInfoAry[2]);
     }
-    if(contents == null) return Future.value(null);
-
-    print("contents:${contents}");
-    //return Future.value(null);
-    myTransformer.parse(contents);
-    List<TxCache> txCacheList = [];
-    var txCache = json.decode(myTransformer.toParker());
-    print("---txCache:${txCache}");
-    var cacheList = txCache["caches"]["cache"];
-    if(cacheList == null) return Future.value(null);
-
-    if(cacheList is List){
-      for(var item in cacheList){
-        txCacheList.add(TxCache(item));
-      }
-    }else {
-      txCacheList.add(TxCache(cacheList));
+    if(totalCache == 0){
+      totalCache = await _getVideoSizeFromNet();
     }
-
-    for(var item in txCacheList){
-      if(item.url == url){
-        String path = item.path;
-        File fileInfo = File("${cachePath}/txvodcache/${path}.info");
-        String contentInfo ;
-        if(fileInfo.existsSync()){
-          try{
-            contentInfo = await fileInfo.readAsString();
-          }catch(e){
-            print("---error:${e}");
-          }
-        }
-        if(contentInfo == null) return Future.value(null);
-
-        List<String> contentInfoAry = contentInfo.split("\n");
-        print("---contentInfoAry:${contentInfoAry}");
-        if(contentInfoAry != null && contentInfoAry.length >= 4){
-          int totalCache = int.parse(contentInfoAry[1]);
-          int currCache = int.parse(contentInfoAry[2]);
-          if(totalCache == currCache){
-            //已经缓存完成
-            print("已经缓存完成");
-            return Future.value(true);
-          }else if(totalCache > currCache){
-            print("未缓存完成：totalCache-${totalCache}, currCache-${currCache}");
-            return Future.value(false);
-          }
-        }
-      }
-    }
+    value = value.copyWith(initialized: true, videoFileSize: totalCache, cacheDiskSize: currCache);
   }
-  return Future.value(null);
+
+  Future<int> _getVideoSizeFromNet() async {
+    HttpClient httpClient;
+    int videoFileSize = 0;
+    try{
+      httpClient = new HttpClient();
+      HttpClientRequest request = await httpClient.getUrl(Uri.parse(dataSource));
+      HttpClientResponse response = await request.close();
+      //输出响应头
+      print(response.headers);
+      print("消耗流量：${response.headers["content-length"][0]}");
+      videoFileSize = int.parse(response.headers["content-length"][0] ?? 0);
+      //value = value.copyWith(videoFileSize: int.parse(response.headers["content-length"][0] ?? 0));
+    }catch(e){
+      print(e);
+    }finally{
+      if(httpClient != null){
+        httpClient.close();
+      }
+    }
+    return Future.value(videoFileSize);
+  }
+
+
 }
 
 class _VideoAppLifeCycleObserver with WidgetsBindingObserver {
