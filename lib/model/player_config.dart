@@ -9,14 +9,12 @@ class PlayerConfig {
   final Map<String, dynamic> auth;
   final bool defaultMute;
   final bool autoLoading;
-
+  //final int maxCacheItems;
   const PlayerConfig(
       {this.autoPlay = true,
         this.loop = false,
         this.headers,
         this.cachePath,
-        //this.cachePath = "/var/mobile/Containers/Data/Application/1A610B42-5E2A-4371-A2EE-3FF79B2525ED/Library/Caches",
-        //this.cachePath = "/var/mobile/Containers/Data/Application/5B994A15-98F7-4318-8379-31C7CBA78BFA/Documents",
         this.progressInterval = 200,
         this.startTime,
         this.auth,
