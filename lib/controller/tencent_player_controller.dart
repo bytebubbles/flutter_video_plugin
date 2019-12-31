@@ -209,14 +209,16 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
     if (!value.initialized || _isDisposed) {
       return;
     }
-    print("-----_applyPlayPause");
+    //print("-----_applyPlayPause");
     dataSourceDescription["textureId"] = _textureId;
     if (value.isPlaying) {
-      print("-----isPlaying");
+      //print("-----isPlaying");
       //await channel.invokeMethod('play', <String, dynamic>{'textureId': _textureId, 'config':dataSourceDescription});
 
       if(isNewStartPlay == null || isNewStartPlay){
-        getCacheState();
+        await getCacheState();
+        if(replayCallback != null) replayCallback();
+        isNewStartPlay = false;
         //if(newStartPlayCallback != null) newStartPlayCallback();
       }
 
@@ -299,8 +301,8 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       currCache = int.parse(videoCacheInfoAry[2]);
     }
     value = value.copyWith(videoFileSize: totalCache, cacheDiskSize: currCache);
-    if(replayCallback != null) replayCallback();
-    isNewStartPlay = false;
+
+
   }
 
   bool _judgeCacheState(var videoCacheInfoAry) {
