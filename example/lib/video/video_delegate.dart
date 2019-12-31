@@ -40,9 +40,12 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
   Widget controlWidget;
   bool isReplay = false;
   VoidCallback _linster;
+  var netStateCallback ;
   int count = 0;
   double ic_play_width = setWidth(140);
   dynamic coverFrame;
+  bool isWifiEnv = false;
+  StreamSubscription netStreamSubscription;
   @override
   void initState() {
     //controller = createVideoPlayerController();
@@ -56,11 +59,18 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
       if(coverFrame == null && controller.value.firstFrame != null){
         coverFrame = controller.value.firstFrame;
       }
-
       setState(() {});
     };
+    netStateCallback = (connectivityResult){
+      if (connectivityResult == ConnectivityResult.wifi) {
+        isWifiEnv = true;
+      }else {
+        isWifiEnv = false;
+      }
+      setState(() {});
+    };
+    _getNetEvn();
     _initVideo();
-
     super.initState();
   }
 
@@ -83,37 +93,27 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     print("---layerLifeCycleState--dispose");
     //controller.dispose();
     netPlayerControl.controller.dispose();
+    netStreamSubscription.cancel();
     super.dispose();
   }
 
   _processController() async {
     if(configDelegate.switchCache){
-      directory = await getTemporaryDirectory();
+      directory = await getExternalStorageDirectory();
       print("-------cache_path:${directory.path}");
       PlayerConfig playerConfig = controller.playerConfig.copyWith(cachePath: directory.path);
       controller.playerConfig = playerConfig;
     }
   }
 
-  _haveWifiAutoPlay()async{
-    if(configDelegate.haveWifiAutoPlay){
-      print("---------haveWifiAutoPlay");
-      bool isWifiEnv = await _judgeNetState();
-      bool autoPlay = controller.playerConfig.autoPlay;
-      PlayerConfig playerConfig = controller.playerConfig.copyWith(autoPlay: isWifiEnv,haveWifiAutoPlay: false);
-      controller.playerConfig = playerConfig;
-      setState(() {});
-    }
-  }
-
-  _judgeNetState() async {
-    bool isWifiEnv = false;
+  _getNetEvn() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.mobile) {
-    } else if (connectivityResult == ConnectivityResult.wifi) {
+    if (connectivityResult == ConnectivityResult.wifi) {
       isWifiEnv = true;
+    }else {
+      isWifiEnv = false;
     }
-    return Future.value(isWifiEnv);
+    netStreamSubscription = Connectivity().onConnectivityChanged.listen(netStateCallback);
   }
 
   _isNeedAutoPlay() async {
@@ -129,7 +129,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     if(configDelegate.haveWifiAutoPlay && !controller.value.isPlaying){
       if(configDelegate.haveWifiAutoPlay){
         print("---------haveWifiAutoPlay");
-        bool isWifiEnv = await _judgeNetState();
+        //bool isWifiEnv = await _judgeNetState();
         if(isWifiEnv){
           controller.play();
         }
@@ -148,18 +148,47 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
     controller?.initialize()?.then((_) async {
       _isNeedAutoPlay();
       isInitializing = false;
-      //coverFrame = controller.coverFrame;
+
       setState(() {});
     });
     controller.newStartPlayCallback = (){
-      if(controller.value.hasCache){
-        Fluttertoast.showToast(msg: "播放已缓存片段，不消耗流量");
+      if(controller.value.hasCache && !isWifiEnv){
+        Fluttertoast.showToast(msg: "播放已缓存片段，不消耗流量",gravity: ToastGravity.TOP);
       }
     };
     controller.addListener(_linster);
   }
+  get needCacheSize{
+    int re = controller.value.videoFileSize - controller.value.cacheDiskSize;
+    if(re > 0){
+      double mb = re/1024/1024;
+      return "当前非WIFI环境，播放消耗${mb.toStringAsFixed(1)}m流量";
+    }else if(re == 0){
+      return "缓存片段，不消耗流量";
+    }
+    print("-----$re");
+    return "";
+  }
   @override
   Widget build(BuildContext context) {
+
+    Widget tips = DecoratedBox(
+      decoration: BoxDecoration(
+          color: Color.fromRGBO(0x00, 0x00, 0x00, 0.3),
+          borderRadius: BorderRadius.all(Radius.circular(setWidth(32)))
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(left: setWidth(16),right: setWidth(16),bottom: setWidth(4)),
+        child: Text(
+          "$needCacheSize",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: setSp(28),
+          ),
+        ),
+      ),
+    );
     if(isReplay){
       controlWidget = AspectRatio(
         aspectRatio: 1,
@@ -192,7 +221,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
         ),
       );
     } else {
-      if(!controller.playerConfig.autoPlay && !controller.value.prepared){
+      if(!controller.playerConfig.autoPlay && !controller.value.prepared && !controller.value.isPlaying){
 
         Widget coverImg;
         if(configDelegate.coverImgUrl != null && configDelegate.coverImgUrl != ""){
@@ -208,28 +237,38 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
             width: double.infinity,
             height: double.infinity,
             child: coverFrame != null ? Image.memory(coverFrame,
-            fit: BoxFit.contain,
+              fit: BoxFit.contain,
             ) : null,
           );
         }
-        controlWidget = AspectRatio(
-          aspectRatio: 1,
-          child: Stack(
-            children: <Widget>[
-              coverImg,
-              Align(
-                alignment: Alignment.center,
-                child: Center(
-                  child: GestureDetector(
-                    onTap: (){
-                      controller.play();
-                    },
-                    child: Image.asset("images/ic_play.png",width: setWidth(140),height: setWidth(140)),
-                  ) ,
+
+        controlWidget = Stack(
+          children: <Widget>[
+            coverImg,
+            Align(
+              alignment: Alignment.center,
+              child: Center(
+                child:  Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(top: setWidth(30)),
+                      child: GestureDetector(
+                        onTap: (){
+                          controller.play();
+                        },
+                        child: Image.asset("images/ic_play.png",width: setWidth(140),height: setWidth(140)),
+                      ),
+                    ),
+                    isWifiEnv ? Container(
+                      height: setWidth(30),
+                    ) : tips
+                  ],
                 ),
-              )
-            ],
-          ),
+              ),
+            )
+          ],
         );
       }else {
         controlWidget = Stack(
@@ -252,42 +291,44 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
         );
       }
     }
-    return Stack(
-      fit: StackFit.passthrough,
-      children: <Widget>[
-        controlWidget,
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          top: 0,
-          child:  (configDelegate.coverImgUrl != null && controller.value.playend ) ? Stack(
-            children: <Widget>[
+    return Container(
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: <Widget>[
+          controlWidget,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            top: 0,
+            child:  (configDelegate.coverImgUrl != null && controller.value.playend ) ? Stack(
+              children: <Widget>[
 
-              CachedNetworkImage(
-                imageUrl: configDelegate.coverImgUrl,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: Center(
-                  child: GestureDetector(
-                    onTap: (){
-                      controller.play();
-                    },
-                    child: Image.asset("images/ic_play.png",width: setWidth(140),height: setWidth(140)),
-                  ) ,
+                CachedNetworkImage(
+                  imageUrl: configDelegate.coverImgUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
-              )
+                Align(
+                  alignment: Alignment.center,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: (){
+                        controller.play();
+                      },
+                      child: Image.asset("images/ic_play.png",width: setWidth(140),height: setWidth(140)),
+                    ) ,
+                  ),
+                )
 
-            ],
-          ):Container(),
-        ),
+              ],
+            ):Container(),
+          ),
 
-      ],
-    ) ;
+        ],
+      ) ,
+    );
   }
 
   TencentPlayerController createVideoPlayerController();
@@ -327,8 +368,8 @@ class NetworkPlayerList extends PlayerLifeCycle{
   final PlayerConfig playerConfig;
   NetworkPlayerList(this.url,{this.playerConfig = const PlayerConfig(autoPlay: true,defaultMute: true)}):
         super((BuildContext context,   NetPlayerControl controller){
-    return FullControl(controller,Axis.vertical);
-  });
+        return FullControl(controller,Axis.vertical);
+      });
   @override
   _NetworkPlayerListState createState() => _NetworkPlayerListState(url,PlayerConfigDelegate(switchCache: true,txPlayerConfig: playerConfig));
 }
@@ -379,6 +420,10 @@ class PlayerConfigDelegate{
   final bool haveCacheAutoPlay;
   final PlayerConfig txPlayerConfig;
 
-  PlayerConfigDelegate({this.switchCache, this.coverImgUrl, this.haveWifiAutoPlay, this.haveCacheAutoPlay, this.txPlayerConfig});
+  PlayerConfigDelegate({this.switchCache = false,
+    this.coverImgUrl,
+    this.haveWifiAutoPlay = false,
+    this.haveCacheAutoPlay = false,
+    this.txPlayerConfig});
 
 }

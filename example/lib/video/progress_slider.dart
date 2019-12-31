@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 typedef ValueChanged<T> = void Function(T value);
@@ -17,6 +18,7 @@ class ProgressSlider extends StatelessWidget {
 
   final double min;
   final double max;
+  final double touchRangeHeight;
 
   final Color activeColor;
   final Color inactiveColor;
@@ -56,6 +58,7 @@ class ProgressSlider extends StatelessWidget {
     this.bufferColor,
     this.borderRadius,
     this.pointWidget,
+    this.touchRangeHeight = 0,
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -120,14 +123,27 @@ class ProgressSlider extends StatelessWidget {
               }
 
               return GestureDetector(
-                onPanDown: (DragDownDetails d) {
+                onTap: () {
+                  if(_startPosition == null) return;
+                  onTap(_startPosition);
+                },
+                onVerticalDragCancel:(){
+                  //print("---GestureDetector:onVerticalDragCancel----");
+                  if(onVerticalDragCancel != null) onVerticalDragCancel(_onDragCancelPosition);
+                },
+                onHorizontalDragCancel: (){
+                  //print("---HorizontalDrag:GestureDetector:onHorizontalDragCancel----");
+                },
+                onHorizontalDragDown: (DragDownDetails d){
+                  //print("---HorizontalDrag:GestureDetector:onHorizontalDragDown----");
                   double x = _constraintsX(d.localPosition.dx);
                   double _value = _startPosition = _lerpValue(x);
                   if (_value != value) {
                     onChanged(_value);
                   }
                 },
-                onPanStart: (DragStartDetails d) {
+                onHorizontalDragStart: (DragStartDetails d){
+                  //print("---HorizontalDrag:GestureDetector:onHorizontalDragStart----");
                   double x = _constraintsX(d.localPosition.dx);
                   double _value = _lerpValue(x);
                   if (onChangeStart != null) onChangeStart(_value);
@@ -135,26 +151,21 @@ class ProgressSlider extends StatelessWidget {
                     onChanged(_value);
                   }
                 },
-                onPanUpdate: (DragUpdateDetails d) {
+                onHorizontalDragUpdate: (DragUpdateDetails d){
+                  //print("---HorizontalDrag:GestureDetector:onHorizontalDragUpdate----");
                   double x = _constraintsX(d.localPosition.dx);
                   double _value = _onDragCancelPosition = _lerpValue(x);
                   onChanged(_value);
                 },
-                onPanEnd: (DragEndDetails d) {
+                onHorizontalDragEnd: (DragEndDetails details){
+                  //print("---HorizontalDrag:GestureDetector:onHorizontalDragEnd----");
                   double _value = _lerpValue(value);
                   if (onChangeEnd != null) onChangeEnd(_value);
                   if (onPanEnd != null) onPanEnd(_value);
                 },
-                onTap: () {
-                  if(_startPosition == null) return;
-                  onTap(_startPosition);
-                },
-                onVerticalDragCancel:(){
-                  if(onVerticalDragCancel != null) onVerticalDragCancel(_onDragCancelPosition);
-                },
                 child: Container(
                   color: Colors.transparent,
-                  height: math.max(pointSize.height, sliderTheme.trackHeight),
+                  height: math.max(touchRangeHeight, math.max(pointSize.height, sliderTheme.trackHeight)) ,
                   child: Stack(
                     overflow: Overflow.visible,
                     alignment: AlignmentDirectional.center,
@@ -171,18 +182,18 @@ class ProgressSlider extends StatelessWidget {
 
                       // 缓冲区
 
-                        _bufferValue != null ? Positioned(
-                          left: 0,
-                          child: Container(
-                            height: sliderTheme.trackHeight,
-                            width: math.min(_bufferValue, _innerMaxWidth),
-                            decoration: BoxDecoration(
-                              color: bufferColor ??
-                                  theme.primaryColor.withOpacity(0.5),
-                              borderRadius: _borderRadius,
-                            ),
+                      _bufferValue != null ? Positioned(
+                        left: 0,
+                        child: Container(
+                          height: sliderTheme.trackHeight,
+                          width: math.min(_bufferValue, _innerMaxWidth),
+                          decoration: BoxDecoration(
+                            color: bufferColor ??
+                                theme.primaryColor.withOpacity(0.5),
+                            borderRadius: _borderRadius,
                           ),
-                        ):Container(),
+                        ),
+                      ):Container(),
 
                       // current value
                       Positioned(

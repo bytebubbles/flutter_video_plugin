@@ -1014,6 +1014,7 @@ class _ProgressWidgetState extends State<ProgressWidget>  {
             activeColor: Colors.white,
             value: positionRatio,
             bufferValue: bufferRatio,
+            touchRangeHeight: 100,
             onChanged: (value){
               //print("-----------onChanged");
               if(!isDragging){
