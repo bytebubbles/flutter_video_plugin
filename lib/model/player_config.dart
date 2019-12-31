@@ -30,11 +30,7 @@ class PlayerConfig {
     int progressInterval,
     int startTime,
     Map<String, dynamic> auth,
-    bool switchCache,
-    String coverImgUrl,
     bool defaultMute,
-    bool haveWifiAutoPlay,
-    bool haveCacheAutoPlay,
     bool autoLoading,
   }){
     return PlayerConfig(
