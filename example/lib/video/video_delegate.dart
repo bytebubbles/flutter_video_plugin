@@ -151,7 +151,7 @@ abstract class _PlayerLifeCycleState extends State<PlayerLifeCycle> {
 
       setState(() {});
     });
-    controller.newStartPlayCallback = (){
+    controller.replayCallback = (){
       if(controller.value.hasCache && !isWifiEnv){
         Fluttertoast.showToast(msg: "播放已缓存片段，不消耗流量",gravity: ToastGravity.TOP);
       }

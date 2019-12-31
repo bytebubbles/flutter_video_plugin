@@ -7,7 +7,7 @@ import 'package:flutter_tencentplayer/model/TxCache.dart';
 //import 'package:xml2json/xml2json.dart';
 import 'dart:convert';
 
-typedef void NewStartPlayCallback();
+typedef void ReplayCallback();
 class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
   int _textureId;
   final String dataSource;
@@ -15,7 +15,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
   PlayerConfig _playerConfig = PlayerConfig();
   MethodChannel channel = TencentPlayer.channel;
   Map<dynamic, dynamic> dataSourceDescription;
-  NewStartPlayCallback newStartPlayCallback;
+  ReplayCallback replayCallback;
   bool isNewStartPlay;
   // ignore: unnecessary_getters_setters
   set playerConfig(PlayerConfig playerConfig) {
@@ -299,7 +299,7 @@ class TencentPlayerController extends ValueNotifier<TencentPlayerValue> {
       currCache = int.parse(videoCacheInfoAry[2]);
     }
     value = value.copyWith(videoFileSize: totalCache, cacheDiskSize: currCache);
-    if(newStartPlayCallback != null) newStartPlayCallback();
+    if(replayCallback != null) replayCallback();
     isNewStartPlay = false;
   }
 
